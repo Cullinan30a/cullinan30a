@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI 提示生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #output {
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 提示生成器</h1>
+        
+        <!-- 1. 選擇角色 -->
+        <div class="form-group">
+            <label for="role">角色：</label>
+            <select id="role" onchange="updateOutput()">
+                <option value="內容編輯">內容編輯</option>
+                <option value="市場營銷專家">市場營銷專家</option>
+                <option value="技術支持顧問">技術支持顧問</option>
+                <option value="社交媒體經理">社交媒體經理</option>
+                <option value="SEO專家">SEO專家</option>
+                <!-- 其他選項 -->
+            </select>
+        </div>
+        
+        <!-- 2. 描述任務 -->
+        <div class="form-group">
+            <label for="task">任務：</label>
+            <select id="task" onchange="updateOutput()">
+                <option value="有創意">有創意</option>
+                <option value="資訊豐富">資訊豐富</option>
+                <option value="撰寫一個包含引言、主體和結論的三段式文章">撰寫一個包含引言、主體和結論的三段式文章</option>
+                <!-- 其他選項 -->
+            </select>
+        </div>
+        
+        <!-- 3. 上下文 -->
+        <div class="form-group">
+            <label for="context">上下文：</label>
+            <textarea id="context" placeholder="請輸入上下文..." oninput="updateOutput()"></textarea>
+        </div>
+        
+        <!-- 4. 輸出格式 -->
+        <div class="form-group">
+            <label for="format">期望輸出格式：</label>
+            <select id="format" onchange="updateOutput()">
+                <option value="文章格式（引言、問題描述、解決方案、總結）">文章格式（引言、問題描述、解決方案、總結）</option>
+                <option value="學術引用">學術引用</option>
+                <option value="表格格式">表格格式</option>
+                <!-- 其他選項 -->
+            </select>
+        </div>
+        
+        <!-- 即時顯示 -->
+        <div class="form-group">
+            <label>即時顯示：</label>
+            <div id="output"></div>
+        </div>
+        
+        <!-- 複製按鈕 -->
+        <button onclick="copyToClipboard()">複製</button>
+    </div>
+
+    <script>
+        function updateOutput() {
+            const role = document.getElementById('role').value;
+            const task = document.getElementById('task').value;
+            const context = document.getElementById('context').value;
+            const format = document.getElementById('format').value;
+            
+            const output = `
+            角色: ${role}
+            任務: ${task}
+            上下文: ${context}
+            期望輸出格式: ${format}
+            `;
+
+            document.getElementById('output').innerText = output.trim();
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output').innerText;
+            navigator.clipboard.writeText(output).then(() => {
+                alert('內容已複製到剪貼簿！');
+            });
+        }
+
+        // 初始調用以填充預設內容
+        updateOutput();
+    </script>
+</body>
+</html>
