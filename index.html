@@ -37,6 +37,43 @@
       color: #333;
       text-decoration: none;
     }
+    .user-links {
+      margin-top: 30px;
+    }
+    .user-links h3 {
+      color: #666;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    .user-link-item {
+      margin: 15px 0;
+      padding: 10px 15px;
+      border: 1px solid #007bff;
+      border-radius: 5px;
+      background-color: #f8f9ff;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .user-link-item:hover {
+      background-color: #e9ecff;
+      border-color: #0056b3;
+    }
+    .add-link-btn {
+      margin: 20px 0;
+      padding: 12px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    .add-link-btn:hover {
+      background-color: #218838;
+    }
   </style>
 </head>
 <body>
@@ -46,6 +83,17 @@
   <ul id="pageList" class="page-list">
     <!-- Page items will be added by JavaScript -->
   </ul>
+  
+  <button class="add-link-btn" onclick="window.location.href='add_link.html'">
+    + Add New Website Link | + 添加新網站連結
+  </button>
+  
+  <div class="user-links" id="userLinksSection" style="display: none;">
+    <h3>Your Added Links | 您添加的連結</h3>
+    <ul id="userLinksList" class="page-list">
+      <!-- User added links will appear here -->
+    </ul>
+  </div>
   
   <script>
     // Define your HTML pages here
@@ -57,7 +105,7 @@
 
     const pageList = document.getElementById("pageList");
 
-    // Create bullet point list items
+    // Create bullet point list items for built-in pages
     pages.forEach(page => {
       const listItem = document.createElement("li");
       listItem.className = "page-item";
@@ -66,6 +114,51 @@
         window.location.href = page.file;
       };
       pageList.appendChild(listItem);
+    });
+    
+    // Load and display user-added links
+    function loadUserLinks() {
+      const savedLinks = JSON.parse(localStorage.getItem('websiteLinks') || '[]');
+      const userLinksSection = document.getElementById('userLinksSection');
+      const userLinksList = document.getElementById('userLinksList');
+      
+      if (savedLinks.length > 0) {
+        userLinksSection.style.display = 'block';
+        userLinksList.innerHTML = '';
+        
+        savedLinks.forEach(link => {
+          const listItem = document.createElement("li");
+          listItem.className = "user-link-item";
+          listItem.innerHTML = `<span class="page-title">${escapeHtml(link.title)}</span>`;
+          listItem.onclick = () => {
+            window.open(link.url, '_blank');
+          };
+          userLinksList.appendChild(listItem);
+        });
+      } else {
+        userLinksSection.style.display = 'none';
+      }
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Load user links on page load
+    loadUserLinks();
+    
+    // Listen for storage changes (when links are added/removed)
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'websiteLinks') {
+        loadUserLinks();
+      }
+    });
+    
+    // Also listen for custom events from the add_link page
+    window.addEventListener('linksUpdated', function() {
+      loadUserLinks();
     });
   </script>
 </body>
