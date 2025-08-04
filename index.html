@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Index</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Website Pages Index</h2>
+  <p>Select a page to visit:</p>
+  
+  <select id="pageSelect">
+    <!-- Options will be added by JavaScript -->
+  </select>
+  
+  <button onclick="redirectPage()">Go to Page</button>
+  
+  <script>
+    // Define your HTML pages here
+    const pages = [
+      { title: "About Page", file: "about.html" },
+      { title: "Contact Page", file: "contact.html" },
+      { title: "Word Replacer Tool", file: "replacer.html" },
+      { title: "Demo Page", file: "demo.html" }
+    ];
+
+    const select = document.getElementById("pageSelect");
+
+    // Populate the dropdown
+    pages.forEach(page => {
+      const option = document.createElement("option");
+      option.value = page.file;
+      option.textContent = page.title;
+      select.appendChild(option);
+    });
+
+    function redirectPage() {
+      const selectedFile = select.value;
+      if (selectedFile) {
+        window.location.href = selectedFile;
+      }
+    }
+  </script>
+</body>
+</html>
