@@ -162,6 +162,21 @@
     
     <h1>Copilot Prompt Helper | Copilot 提示助手</h1>
 
+    <div class="form-group">
+      <label for="output">Generated Copilot Prompt | 生成的 Copilot 提示: <span style="color: #666; font-size: 12px; font-weight: normal;">(editable | 可編輯)</span></label>
+      <textarea id="output" placeholder="Your optimized Copilot prompt will appear here... | 您優化的 Copilot 提示將在此處顯示..."></textarea>
+      <div style="font-size: 12px; color: #666; margin-top: 5px;">
+        💡 <strong>Tip:</strong> You can edit the generated prompt above to fine-tune it. Press <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd>) to copy quickly. | 
+        您可以編輯上面生成的提示來進行微調。按 <kbd>Ctrl+Enter</kbd>（或 <kbd>Cmd+Enter</kbd>）快速複製。
+      </div>
+    </div>
+
+    <div class="form-group">
+      <button onclick="copyPrompt()">Copy to Clipboard | 複製到剪貼板</button>
+    </div>
+
+    <hr style="margin: 30px 0; border: 1px solid #ddd;">
+
     <div class="mobile-prompts-section">
       <h2 style="color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-bottom: 20px;">
         Copilot 提示語清單 (手機改 Code 專用) | Mobile Code Editing Prompts
@@ -276,16 +291,6 @@ Which file should I edit, and can you show me the code I need to update?
     
     <div class="form-group">
       <button onclick="generatePrompt()">Generate Prompt | 生成提示</button>
-      <button onclick="copyPrompt()">Copy to Clipboard | 複製到剪貼板</button>
-    </div>
-    
-    <div class="form-group">
-      <label for="output">Generated Copilot Prompt | 生成的 Copilot 提示: <span style="color: #666; font-size: 12px; font-weight: normal;">(editable | 可編輯)</span></label>
-      <textarea id="output" placeholder="Your optimized Copilot prompt will appear here... | 您優化的 Copilot 提示將在此處顯示..."></textarea>
-      <div style="font-size: 12px; color: #666; margin-top: 5px;">
-        💡 <strong>Tip:</strong> You can edit the generated prompt above to fine-tune it. Press <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd>) to copy quickly. | 
-        您可以編輯上面生成的提示來進行微調。按 <kbd>Ctrl+Enter</kbd>（或 <kbd>Cmd+Enter</kbd>）快速複製。
-      </div>
     </div>
     
     <div class="prompt-type">
