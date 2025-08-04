@@ -14,11 +14,28 @@
     h2 {
       text-align: center;
     }
-    select, button {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 16px;
+    .page-list {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin: 20px 0;
+    }
+    .page-item {
+      margin: 15px 0;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .page-item:hover {
+      background-color: #e9e9e9;
+      border-color: #ccc;
+    }
+    .page-title {
+      font-weight: bold;
+      color: #333;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -26,37 +43,29 @@
   <h2>Website Pages Index</h2>
   <p>Select a page to visit:</p>
   
-  <select id="pageSelect">
-    <!-- Options will be added by JavaScript -->
-  </select>
-  
-  <button onclick="redirectPage()">Go to Page</button>
+  <ul id="pageList" class="page-list">
+    <!-- Page items will be added by JavaScript -->
+  </ul>
   
   <script>
     // Define your HTML pages here
     const pages = [
-      { title: "About Page", file: "about.html" },
-      { title: "Contact Page", file: "contact.html" },
-      { title: "Word Replacer Tool", file: "replacer.html" },
-      { title: "Demo Page", file: "demo.html" }
+      { title: "AI Prompt Generator", file: "ai_prompt_generator.html" },
+      { title: "Copilot Prompt Helper", file: "copilot_prompt.html" }
     ];
 
-    const select = document.getElementById("pageSelect");
+    const pageList = document.getElementById("pageList");
 
-    // Populate the dropdown
+    // Create bullet point list items
     pages.forEach(page => {
-      const option = document.createElement("option");
-      option.value = page.file;
-      option.textContent = page.title;
-      select.appendChild(option);
+      const listItem = document.createElement("li");
+      listItem.className = "page-item";
+      listItem.innerHTML = `<span class="page-title">${page.title}</span>`;
+      listItem.onclick = () => {
+        window.location.href = page.file;
+      };
+      pageList.appendChild(listItem);
     });
-
-    function redirectPage() {
-      const selectedFile = select.value;
-      if (selectedFile) {
-        window.location.href = selectedFile;
-      }
-    }
   </script>
 </body>
 </html>
