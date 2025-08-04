@@ -115,6 +115,26 @@
       border: 1px solid #e0e0e0;
       margin: 15px 0;
     }
+    .prompt-cards-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      background-color: #fafafa;
+    }
+    .prompt-card.selected {
+      background-color: #e3f2fd;
+      border-left-color: #1976d2;
+      transform: scale(1.02);
+      transition: all 0.3s ease;
+    }
+    hr {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, #4CAF50, #2196F3);
+      margin: 30px 0;
+    }
   </style>
 </head>
 <body>
@@ -122,6 +142,86 @@
     <a href="index.html" class="back-link">← Back to Index | 返回索引</a>
     
     <h1>Copilot Prompt Helper | Copilot 提示助手</h1>
+
+    <div class="mobile-prompts-section">
+      <h2 style="color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-bottom: 20px;">
+        Copilot 提示語清單 (手機改 Code 專用) | Mobile Code Editing Prompts
+      </h2>
+      
+      <div class="form-group">
+        <label for="mobilePromptSelect">Quick Mobile Prompts | 快速手機提示:</label>
+        <select id="mobilePromptSelect">
+          <option value="">-- Select a mobile prompt template | 選擇手機提示模板 --</option>
+          <option value="changeText">1. 改文字 | Change Text</option>
+          <option value="changeColor">2. 改顏色 / 風格 | Change Colors/Styles</option>
+          <option value="addElement">3. 加新元素 | Add New Elements</option>
+          <option value="changeFunction">4. 改功能 | Change Functionality</option>
+          <option value="changeImage">5. 圖片 / 圖示 | Images/Icons</option>
+          <option value="locationHelp">6. 定位幫助 | Location Help</option>
+        </select>
+      </div>
+
+      <div class="prompt-cards-container" id="promptCardsContainer">
+        <div class="prompt-card" data-type="changeText">
+          <h3 style="color: #2196F3; margin-bottom: 10px;">1. 改文字 | Change Text</h3>
+          <div class="example">
+In [index.html], please change the text inside the [header section] 
+from "Welcome" to "Hello Hudson".
+          </div>
+          <p><strong>👉 用途：</strong>改標題、改段落字、button 上面文字。</p>
+          <p><strong>💡 提示：</strong>用「header / footer / nav bar / button / paragraph」去描述位置。</p>
+        </div>
+
+        <div class="prompt-card" data-type="changeColor">
+          <h3 style="color: #2196F3; margin-bottom: 10px;">2. 改顏色 / 風格 | Change Colors/Styles</h3>
+          <div class="example">
+In [style.css] or [script.js], update the [button section] background color to red.
+          </div>
+          <p><strong>👉 用途：</strong>改字體顏色、button 色、背景色。</p>
+          <p><strong>💡 提示：</strong>如果唔知係 CSS 定 JS，就直接講「style or script」。</p>
+        </div>
+
+        <div class="prompt-card" data-type="addElement">
+          <h3 style="color: #2196F3; margin-bottom: 10px;">3. 加新元素 | Add New Elements</h3>
+          <div class="example">
+In the [nav bar section] of index.html, 
+please add a new menu item called "Contact Us" that links to contact.html.
+          </div>
+          <p><strong>👉 用途：</strong>加新選單、加新按鈕、加一段內容。</p>
+        </div>
+
+        <div class="prompt-card" data-type="changeFunction">
+          <h3 style="color: #2196F3; margin-bottom: 10px;">4. 改功能 | Change Functionality</h3>
+          <div class="example">
+In [script.js], please update the button click function so that 
+when clicked, it shows an alert message: "Hello Hudson!"
+          </div>
+          <p><strong>👉 用途：</strong>控制按鈕動作、彈出訊息、互動效果。</p>
+        </div>
+
+        <div class="prompt-card" data-type="changeImage">
+          <h3 style="color: #2196F3; margin-bottom: 10px;">5. 圖片 / 圖示 | Images/Icons</h3>
+          <div class="example">
+In [index.html], replace the image in the [hero section] 
+with "myphoto.jpg" from the assets folder.
+          </div>
+          <p><strong>👉 用途：</strong>換 banner 圖、換 logo、加 icon。</p>
+        </div>
+
+        <div class="prompt-card" data-type="locationHelp">
+          <h3 style="color: #2196F3; margin-bottom: 10px;">6. 定位幫助 | Location Help</h3>
+          <div class="example">
+I want to change the text in the top header of the webpage (screenshot attached).
+Which file should I edit, and can you show me the code I need to update?
+          </div>
+          <p><strong>👉 用途：</strong>當你唔肯定係 HTML、CSS 定 JS，就交俾 Copilot 幫你揾。</p>
+        </div>
+      </div>
+    </div>
+
+    <hr style="margin: 30px 0; border: 1px solid #ddd;">
+
+    <h2 style="color: #333; margin-bottom: 20px;">Advanced Prompt Generator | 進階提示生成器</h2>
     
     <div class="form-group">
       <label for="promptType">Choose Prompt Type | 選擇提示類型:</label>
@@ -184,70 +284,24 @@
         <li>Include error handling preferences | 包含錯誤處理偏好</li>
       </ul>
     </div>
-
-    <div class="mobile-prompts-section">
-      <h2 style="color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-top: 30px;">
-        Copilot 提示語清單 (手機改 Code 專用) | Mobile Code Editing Prompts
-      </h2>
-      
-      <div class="prompt-card">
-        <h3 style="color: #2196F3; margin-bottom: 10px;">1. 改文字 | Change Text</h3>
-        <div class="example">
-In [index.html], please change the text inside the [header section] 
-from "Welcome" to "Hello Hudson".
-        </div>
-        <p><strong>👉 用途：</strong>改標題、改段落字、button 上面文字。</p>
-        <p><strong>💡 提示：</strong>用「header / footer / nav bar / button / paragraph」去描述位置。</p>
-      </div>
-
-      <div class="prompt-card">
-        <h3 style="color: #2196F3; margin-bottom: 10px;">2. 改顏色 / 風格 | Change Colors/Styles</h3>
-        <div class="example">
-In [style.css] or [script.js], update the [button section] background color to red.
-        </div>
-        <p><strong>👉 用途：</strong>改字體顏色、button 色、背景色。</p>
-        <p><strong>💡 提示：</strong>如果唔知係 CSS 定 JS，就直接講「style or script」。</p>
-      </div>
-
-      <div class="prompt-card">
-        <h3 style="color: #2196F3; margin-bottom: 10px;">3. 加新元素 | Add New Elements</h3>
-        <div class="example">
-In the [nav bar section] of index.html, 
-please add a new menu item called "Contact Us" that links to contact.html.
-        </div>
-        <p><strong>👉 用途：</strong>加新選單、加新按鈕、加一段內容。</p>
-      </div>
-
-      <div class="prompt-card">
-        <h3 style="color: #2196F3; margin-bottom: 10px;">4. 改功能 | Change Functionality</h3>
-        <div class="example">
-In [script.js], please update the button click function so that 
-when clicked, it shows an alert message: "Hello Hudson!"
-        </div>
-        <p><strong>👉 用途：</strong>控制按鈕動作、彈出訊息、互動效果。</p>
-      </div>
-
-      <div class="prompt-card">
-        <h3 style="color: #2196F3; margin-bottom: 10px;">5. 圖片 / 圖示 | Images/Icons</h3>
-        <div class="example">
-In [index.html], replace the image in the [hero section] 
-with "myphoto.jpg" from the assets folder.
-        </div>
-        <p><strong>👉 用途：</strong>換 banner 圖、換 logo、加 icon。</p>
-      </div>
-
-      <div class="prompt-card">
-        <h3 style="color: #2196F3; margin-bottom: 10px;">6. 定位幫助 | Location Help</h3>
-        <div class="example">
-I want to change the text in the top header of the webpage (screenshot attached).
-Which file should I edit, and can you show me the code I need to update?
-        </div>
-        <p><strong>👉 用途：</strong>當你唔肯定係 HTML、CSS 定 JS，就交俾 Copilot 幫你揾。</p>
-      </div>
-    </div>
   </div>
   
   <script>
+    // Mobile prompt templates
+    const mobilePrompts = {
+      changeText: `In [index.html], please change the text inside the [header section] 
+from "Welcome" to "Hello Hudson".`,
+      changeColor: `In [style.css] or [script.js], update the [button section] background color to red.`,
+      addElement: `In the [nav bar section] of index.html, 
+please add a new menu item called "Contact Us" that links to contact.html.`,
+      changeFunction: `In [script.js], please update the button click function so that 
+when clicked, it shows an alert message: "Hello Hudson!"`,
+      changeImage: `In [index.html], replace the image in the [hero section] 
+with "myphoto.jpg" from the assets folder.`,
+      locationHelp: `I want to change the text in the top header of the webpage (screenshot attached).
+Which file should I edit, and can you show me the code I need to update?`
+    };
+
     const promptTemplates = {
       function: {
         template: "Create a {language} function that {requirement}. The function should:\n- Handle edge cases and errors\n- Include proper documentation\n- Follow best practices for {language}\n- Be well-structured and readable\n\nPlease include:\n- Function signature\n- Parameter validation\n- Return type specification\n- Example usage",
@@ -337,6 +391,54 @@ Which file should I edit, and can you show me the code I need to update?
       const template = promptTemplates[promptType];
       const placeholder = `Example: ${template.example} | 示例：${template.example}`;
       document.getElementById("customInput").placeholder = placeholder;
+    });
+    
+    // Handle mobile prompt selection
+    document.getElementById("mobilePromptSelect").addEventListener("change", function() {
+      const selectedType = this.value;
+      const output = document.getElementById("output");
+      
+      // Clear previous selections
+      document.querySelectorAll('.prompt-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      if (selectedType && mobilePrompts[selectedType]) {
+        // Copy the prompt to output
+        output.value = mobilePrompts[selectedType];
+        
+        // Highlight the selected card
+        const selectedCard = document.querySelector(`[data-type="${selectedType}"]`);
+        if (selectedCard) {
+          selectedCard.classList.add('selected');
+          selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Show success message
+        output.style.borderColor = '#4CAF50';
+        setTimeout(() => {
+          output.style.borderColor = '#ddd';
+        }, 2000);
+      } else {
+        output.value = '';
+      }
+    });
+
+    // Add click handlers to prompt cards
+    document.querySelectorAll('.prompt-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const cardType = this.getAttribute('data-type');
+        const select = document.getElementById("mobilePromptSelect");
+        
+        // Update select dropdown
+        select.value = cardType;
+        
+        // Trigger the change event
+        select.dispatchEvent(new Event('change'));
+      });
+      
+      // Add hover effect
+      card.style.cursor = 'pointer';
     });
     
     // Initialize with first option example
