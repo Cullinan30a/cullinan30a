@@ -276,11 +276,12 @@
         // Try multiple methods to get the title
         let title = await getWebsiteTitle(url);
         
-        if (title) {
+        if (title && title !== 'Website' && title !== 'Untitled Page') {
           titleInput.value = title;
           showResult('success', `Title fetched successfully! | 標題獲取成功！<br><strong>Title:</strong> ${escapeHtml(title)}`);
         } else {
-          showResult('error', 'Could not fetch title from this website | 無法從此網站獲取標題');
+          // If we couldn't get a good title, ask user to enter manually
+          showResult('error', `Could not fetch title from this website. Please enter the title manually. | 無法從此網站獲取標題，請手動輸入標題。<br><em>Tip: Some websites require JavaScript to load the title.</em> | <em>提示：某些網站需要 JavaScript 來載入標題。</em>`);
         }
       } catch (error) {
         console.error('Error fetching title:', error);
@@ -293,7 +294,53 @@
     }
     
     async function getWebsiteTitle(url) {
-      // Method 1: Try using a CORS proxy to fetch the page
+      // Method 1: Try using a free web scraping API that handles JavaScript
+      try {
+        const webScrapingUrl = `https://web-scraping-api.vercel.app/api/scrape?url=${encodeURIComponent(url)}`;
+        const response = await fetch(webScrapingUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.title && data.title.trim()) {
+            return cleanTitle(data.title.trim());
+          }
+        }
+      } catch (error) {
+        console.log('Web scraping API method failed:', error);
+      }
+      
+      // Method 2: Try ScrapingBee API (demo key - limited usage)
+      try {
+        const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=demo&url=${encodeURIComponent(url)}&render_js=true`;
+        const response = await fetch(scrapingBeeUrl);
+        
+        if (response.ok) {
+          const htmlContent = await response.text();
+          let title = extractTitleFromHtml(htmlContent);
+          if (title) {
+            return cleanTitle(title);
+          }
+        }
+      } catch (error) {
+        console.log('ScrapingBee method failed:', error);
+      }
+      
+      // Method 2: Try htmlq.org API for title extraction
+      try {
+        const htmlqUrl = `https://htmlq.org/api?url=${encodeURIComponent(url)}&query=title&format=text`;
+        const response = await fetch(htmlqUrl);
+        
+        if (response.ok) {
+          const title = await response.text();
+          if (title && title.trim()) {
+            return cleanTitle(title.trim());
+          }
+        }
+      } catch (error) {
+        console.log('HTMLQ method failed:', error);
+      }
+      
+      // Method 3: Try using AllOrigins with better parsing
       try {
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
         const response = await fetch(proxyUrl);
@@ -302,45 +349,134 @@
           const data = await response.json();
           const htmlContent = data.contents;
           
-          // Parse HTML to extract title
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(htmlContent, 'text/html');
-          const titleElement = doc.querySelector('title');
-          
-          if (titleElement && titleElement.textContent.trim()) {
-            return titleElement.textContent.trim();
+          // Try multiple ways to extract title
+          let title = extractTitleFromHtml(htmlContent);
+          if (title) {
+            return cleanTitle(title);
           }
         }
       } catch (error) {
-        console.log('Proxy method failed:', error);
+        console.log('AllOrigins method failed:', error);
       }
       
-      // Method 2: Try using another proxy service
+      // Method 4: Try corsproxy.io
       try {
         const proxyUrl2 = `https://corsproxy.io/?${encodeURIComponent(url)}`;
         const response = await fetch(proxyUrl2);
         
         if (response.ok) {
           const htmlContent = await response.text();
-          
-          // Extract title using regex as fallback
-          const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
-          if (titleMatch && titleMatch[1]) {
-            return titleMatch[1].trim();
+          let title = extractTitleFromHtml(htmlContent);
+          if (title) {
+            return cleanTitle(title);
           }
         }
       } catch (error) {
-        console.log('Second proxy method failed:', error);
+        console.log('CorsProxy method failed:', error);
       }
       
-      // Method 3: Extract domain name as fallback
+      // Method 5: Try thingproxy
+      try {
+        const proxyUrl3 = `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl3);
+        
+        if (response.ok) {
+          const htmlContent = await response.text();
+          let title = extractTitleFromHtml(htmlContent);
+          if (title) {
+            return cleanTitle(title);
+          }
+        }
+      } catch (error) {
+        console.log('ThingProxy method failed:', error);
+      }
+      
+      // Method 6: Extract domain name as fallback
       try {
         const urlObj = new URL(url);
         const domain = urlObj.hostname.replace(/^www\./, '');
-        return `${domain.charAt(0).toUpperCase() + domain.slice(1)} Website`;
+        const siteName = domain.split('.')[0];
+        return `${siteName.charAt(0).toUpperCase() + siteName.slice(1)} - ${domain}`;
       } catch (error) {
-        return null;
+        return 'Website';
       }
+    }
+    
+    function extractTitleFromHtml(htmlContent) {
+      // Method 1: Use DOMParser (most reliable)
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const titleElement = doc.querySelector('title');
+        
+        if (titleElement && titleElement.textContent.trim()) {
+          return titleElement.textContent.trim();
+        }
+      } catch (error) {
+        console.log('DOMParser failed:', error);
+      }
+      
+      // Method 2: Try og:title meta tag
+      try {
+        const ogTitleMatch = htmlContent.match(/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']+)["\'][^>]*>/i);
+        if (ogTitleMatch && ogTitleMatch[1]) {
+          return ogTitleMatch[1].trim();
+        }
+      } catch (error) {
+        console.log('OG title extraction failed:', error);
+      }
+      
+      // Method 3: Try Twitter title meta tag
+      try {
+        const twitterTitleMatch = htmlContent.match(/<meta[^>]*name=["\']twitter:title["\'][^>]*content=["\']([^"\']+)["\'][^>]*>/i);
+        if (twitterTitleMatch && twitterTitleMatch[1]) {
+          return twitterTitleMatch[1].trim();
+        }
+      } catch (error) {
+        console.log('Twitter title extraction failed:', error);
+      }
+      
+      // Method 4: Try regular title tag with regex
+      try {
+        const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (titleMatch && titleMatch[1]) {
+          return titleMatch[1].trim();
+        }
+      } catch (error) {
+        console.log('Regex title extraction failed:', error);
+      }
+      
+      // Method 5: Try h1 tag as fallback
+      try {
+        const h1Match = htmlContent.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+        if (h1Match && h1Match[1]) {
+          return h1Match[1].trim();
+        }
+      } catch (error) {
+        console.log('H1 extraction failed:', error);
+      }
+      
+      return null;
+    }
+    
+    function cleanTitle(title) {
+      // Remove common unwanted parts from titles
+      title = title
+        .replace(/\s*\|\s*.*$/, '') // Remove everything after | 
+        .replace(/\s*-\s*.*$/, '') // Remove everything after -
+        .replace(/\s*–\s*.*$/, '') // Remove everything after –
+        .replace(/\s*—\s*.*$/, '') // Remove everything after —
+        .replace(/\s*\(\d+\)\s*$/, '') // Remove notification counts like (5)
+        .replace(/^\s*/, '') // Remove leading whitespace
+        .replace(/\s*$/, '') // Remove trailing whitespace
+        .replace(/\s+/g, ' '); // Replace multiple spaces with single space
+      
+      // If title is too long, truncate it
+      if (title.length > 100) {
+        title = title.substring(0, 97) + '...';
+      }
+      
+      return title || 'Untitled Page';
     }
 
     document.getElementById('linkForm').addEventListener('submit', function(e) {
