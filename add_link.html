@@ -126,6 +126,46 @@
     .delete-btn:hover {
       background-color: #c82333;
     }
+    .fetch-title-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+      transition: background-color 0.3s;
+    }
+    .fetch-title-btn:hover {
+      background-color: #0056b3;
+    }
+    .fetch-title-btn:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    .url-input-group {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .url-input-wrapper {
+      flex-grow: 1;
+    }
+    .loading-spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -143,8 +183,16 @@
       
       <div class="form-group">
         <label for="linkUrl">Website URL | 網站連結:</label>
-        <input type="url" id="linkUrl" name="linkUrl" required 
-               placeholder="https://example.com | 輸入網站連結">
+        <div class="url-input-group">
+          <div class="url-input-wrapper">
+            <input type="url" id="linkUrl" name="linkUrl" required 
+                   placeholder="https://example.com | 輸入網站連結">
+          </div>
+          <button type="button" class="fetch-title-btn" id="fetchTitleBtn">
+            Get Title | 獲取標題
+          </button>
+          <div class="loading-spinner" id="loadingSpinner"></div>
+        </div>
       </div>
       
       <button type="submit" class="submit-btn">
@@ -168,7 +216,132 @@
     // Load saved links on page load
     document.addEventListener('DOMContentLoaded', function() {
       displaySavedLinks();
+      
+      // Add event listener for fetch title button
+      document.getElementById('fetchTitleBtn').addEventListener('click', fetchWebsiteTitle);
+      
+      // Add event listener for URL input to auto-fetch title when URL is pasted
+      const urlInput = document.getElementById('linkUrl');
+      urlInput.addEventListener('paste', function() {
+        // Wait a bit for the paste to complete
+        setTimeout(() => {
+          const url = urlInput.value.trim();
+          const titleInput = document.getElementById('linkTitle');
+          
+          // Only auto-fetch if title is empty and URL looks valid
+          if (url && !titleInput.value.trim() && url.startsWith('http')) {
+            fetchWebsiteTitle();
+          }
+        }, 100);
+      });
+      
+      // Also trigger on blur (when user finishes typing URL)
+      urlInput.addEventListener('blur', function() {
+        const url = urlInput.value.trim();
+        const titleInput = document.getElementById('linkTitle');
+        
+        // Only auto-fetch if title is empty and URL looks valid
+        if (url && !titleInput.value.trim() && url.startsWith('http')) {
+          fetchWebsiteTitle();
+        }
+      });
     });
+
+    async function fetchWebsiteTitle() {
+      const urlInput = document.getElementById('linkUrl');
+      const titleInput = document.getElementById('linkTitle');
+      const fetchBtn = document.getElementById('fetchTitleBtn');
+      const spinner = document.getElementById('loadingSpinner');
+      
+      const url = urlInput.value.trim();
+      
+      if (!url) {
+        showResult('error', 'Please enter a URL first | 請先輸入網址');
+        return;
+      }
+      
+      // Validate URL
+      try {
+        new URL(url);
+      } catch (e) {
+        showResult('error', 'Please enter a valid URL | 請輸入有效的網址');
+        return;
+      }
+      
+      // Show loading state
+      fetchBtn.disabled = true;
+      spinner.style.display = 'block';
+      
+      try {
+        // Try multiple methods to get the title
+        let title = await getWebsiteTitle(url);
+        
+        if (title) {
+          titleInput.value = title;
+          showResult('success', `Title fetched successfully! | 標題獲取成功！<br><strong>Title:</strong> ${escapeHtml(title)}`);
+        } else {
+          showResult('error', 'Could not fetch title from this website | 無法從此網站獲取標題');
+        }
+      } catch (error) {
+        console.error('Error fetching title:', error);
+        showResult('error', `Failed to fetch title: ${error.message} | 獲取標題失敗: ${error.message}`);
+      } finally {
+        // Hide loading state
+        fetchBtn.disabled = false;
+        spinner.style.display = 'none';
+      }
+    }
+    
+    async function getWebsiteTitle(url) {
+      // Method 1: Try using a CORS proxy to fetch the page
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const htmlContent = data.contents;
+          
+          // Parse HTML to extract title
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlContent, 'text/html');
+          const titleElement = doc.querySelector('title');
+          
+          if (titleElement && titleElement.textContent.trim()) {
+            return titleElement.textContent.trim();
+          }
+        }
+      } catch (error) {
+        console.log('Proxy method failed:', error);
+      }
+      
+      // Method 2: Try using another proxy service
+      try {
+        const proxyUrl2 = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl2);
+        
+        if (response.ok) {
+          const htmlContent = await response.text();
+          
+          // Extract title using regex as fallback
+          const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+          if (titleMatch && titleMatch[1]) {
+            return titleMatch[1].trim();
+          }
+        }
+      } catch (error) {
+        console.log('Second proxy method failed:', error);
+      }
+      
+      // Method 3: Extract domain name as fallback
+      try {
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname.replace(/^www\./, '');
+        return `${domain.charAt(0).toUpperCase() + domain.slice(1)} Website`;
+      } catch (error) {
+        return null;
+      }
+    }
 
     document.getElementById('linkForm').addEventListener('submit', function(e) {
       e.preventDefault();
