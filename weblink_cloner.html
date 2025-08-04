@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Cloner | 網站複製工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    input[type="url"], input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    input[type="url"]:focus, input[type="text"]:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+    .submit-btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    .submit-btn:hover {
+      background-color: #45a049;
+    }
+    .submit-btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 2s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Index | 返回索引</a>
+    
+    <h1>Website Cloner | 網站複製工具</h1>
+    
+    <form id="clonerForm">
+      <div class="form-group">
+        <label for="websiteUrl">Website URL | 網站連結:</label>
+        <input type="url" id="websiteUrl" name="websiteUrl" required 
+               placeholder="https://example.com | 輸入要複製的網站連結">
+      </div>
+      
+      <div class="form-group">
+        <label for="fileName">File Name (optional) | 檔案名稱 (可選):</label>
+        <input type="text" id="fileName" name="fileName" 
+               placeholder="Leave empty for auto-generation | 留空自動生成">
+      </div>
+      
+      <button type="submit" class="submit-btn" id="submitBtn">
+        Clone Website | 複製網站
+      </button>
+    </form>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Cloning website... | 正在複製網站...</p>
+    </div>
+    
+    <div class="result" id="result">
+      <!-- Result message will appear here -->
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('clonerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const loading = document.getElementById('loading');
+      const result = document.getElementById('result');
+      const websiteUrl = document.getElementById('websiteUrl').value;
+      const fileName = document.getElementById('fileName').value;
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      loading.style.display = 'block';
+      result.style.display = 'none';
+      
+      try {
+        // Generate filename if not provided
+        const finalFileName = fileName || generateFileName(websiteUrl);
+        
+        // Clone the website
+        const result = await cloneWebsite(websiteUrl, finalFileName);
+        
+        // Show success message
+        if (result.clientSide) {
+          showResult('success', `
+            Website successfully cloned (downloaded)! | 網站成功複製（已下載）！<br>
+            <strong>File downloaded:</strong> ${result.fileName}<br>
+            <strong>已下載檔案:</strong> ${result.fileName}<br>
+            <em>Note: File was downloaded to your computer due to server limitations.</em><br>
+            <em>注意：由於伺服器限制，檔案已下載到您的電腦。</em>
+          `);
+        } else {
+          showResult('success', `
+            Website successfully cloned! | 網站成功複製！<br>
+            <strong>New file created:</strong> <a href="${result.url}" target="_blank">${result.fileName}</a><br>
+            <strong>建立的新檔案:</strong> <a href="${result.url}" target="_blank">${result.fileName}</a>
+          `);
+        }
+        
+      } catch (error) {
+        console.error('Error cloning website:', error);
+        showResult('error', `
+          Error cloning website: ${error.message} | 複製網站時發生錯誤: ${error.message}<br>
+          Please check the URL and try again. | 請檢查網址並重試。
+        `);
+      } finally {
+        // Hide loading state
+        submitBtn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+    
+    function generateFileName(url) {
+      try {
+        const domain = new URL(url).hostname.replace(/^www\./, '');
+        const timestamp = new Date().toISOString().slice(0, 10);
+        return `cloned_${domain.replace(/\./g, '_')}_${timestamp}`;
+      } catch {
+        const timestamp = new Date().toISOString().slice(0, 10);
+        return `cloned_website_${timestamp}`;
+      }
+    }
+    
+    async function cloneWebsite(url, fileName) {
+      try {
+        // Try server-side cloning first (if server is running)
+        const response = await fetch('/api/clone', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url, fileName })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          return { success: true, fileName: result.fileName, url: result.url };
+        } else {
+          throw new Error('Server-side cloning failed, trying client-side...');
+        }
+      } catch (serverError) {
+        console.log('Server-side cloning failed, trying client-side method...');
+        
+        // Fallback to client-side cloning
+        try {
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const response = await fetch(proxyUrl);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch website: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          const htmlContent = data.contents;
+          
+          // Process the HTML content
+          const processedContent = processHtmlContent(htmlContent, url);
+          const finalFileName = `${fileName}.html`;
+          
+          // Create and download the file
+          downloadFile(finalFileName, processedContent);
+          
+          // Store record in localStorage
+          const clonedFiles = JSON.parse(localStorage.getItem('clonedFiles') || '[]');
+          clonedFiles.push({
+            fileName: finalFileName,
+            originalUrl: url,
+            clonedAt: new Date().toISOString()
+          });
+          localStorage.setItem('clonedFiles', JSON.stringify(clonedFiles));
+          
+          return { success: true, fileName: finalFileName, clientSide: true };
+        } catch (clientError) {
+          throw new Error(`Both server and client-side cloning failed: ${clientError.message}`);
+        }
+      }
+    }
+    
+    function processHtmlContent(html, originalUrl) {
+      // Add a header comment with source information
+      const header = `<!-- 
+  This page was cloned from: ${originalUrl}
+  Cloned at: ${new Date().toISOString()}
+  Generated by Website Cloner Tool
+-->
+`;
+      
+      // Basic processing - you can enhance this further
+      let processedHtml = html;
+      
+      // Add base URL to relative links (basic implementation)
+      try {
+        const baseUrl = new URL(originalUrl).origin;
+        processedHtml = processedHtml.replace(/src="\/([^"]*)"/, `src="${baseUrl}/$1"`);
+        processedHtml = processedHtml.replace(/href="\/([^"]*)"/, `href="${baseUrl}/$1"`);
+      } catch (e) {
+        console.warn('Could not process relative URLs:', e);
+      }
+      
+      return header + processedHtml;
+    }
+    
+    function downloadFile(fileName, content) {
+      const blob = new Blob([content], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+    
+    function showResult(type, message) {
+      const result = document.getElementById('result');
+      result.className = `result ${type}`;
+      result.innerHTML = message;
+      result.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
