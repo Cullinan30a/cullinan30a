@@ -1,71 +1,266 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Word Replacer</title>
+  <title>Copilot Prompt Helper | Copilot 提示助手</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
     }
     select, input, button {
       margin: 10px 0;
-      padding: 8px;
+      padding: 12px;
       font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    select:focus, input:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      text-decoration: underline;
     }
     #output {
       width: 100%;
-      height: 120px;
+      height: 150px;
       margin-top: 10px;
+      padding: 15px;
+      font-size: 14px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+    .prompt-type {
+      background-color: #e3f2fd;
       padding: 10px;
-      font-size: 16px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      border-left: 4px solid #2196F3;
+    }
+    .example {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
-  <h2>Word Replacer Tool</h2>
-  
-  <label for="wordSelect">Choose a word:</label>
-  <select id="wordSelect">
-    <option value="About">About</option>
-    <option value="Info">Info</option>
-    <option value="Details">Details</option>
-    <option value="Overview">Overview</option>
-  </select>
-  
-  <br>
-  
-  <label for="customWord">Or enter custom word:</label>
-  <input type="text" id="customWord" placeholder="Type your own word">
-  
-  <br>
-  
-  <button onclick="generateText()">Generate</button>
-  <button onclick="copyText()">Copy to Clipboard</button>
-  
-  <br>
-  
-  <textarea id="output" readonly placeholder="Your text will appear here..."></textarea>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Index | 返回索引</a>
+    
+    <h1>Copilot Prompt Helper | Copilot 提示助手</h1>
+    
+    <div class="form-group">
+      <label for="promptType">Choose Prompt Type | 選擇提示類型:</label>
+      <select id="promptType">
+        <option value="function">Function Generation | 函數生成</option>
+        <option value="class">Class Creation | 類別創建</option>
+        <option value="api">API Integration | API 整合</option>
+        <option value="algorithm">Algorithm Implementation | 演算法實作</option>
+        <option value="testing">Unit Testing | 單元測試</option>
+        <option value="documentation">Documentation | 文檔生成</option>
+        <option value="debugging">Bug Fixing | 錯誤修復</option>
+        <option value="optimization">Code Optimization | 代碼優化</option>
+        <option value="database">Database Query | 資料庫查詢</option>
+        <option value="frontend">Frontend Component | 前端組件</option>
+        <option value="backend">Backend Logic | 後端邏輯</option>
+        <option value="security">Security Implementation | 安全實作</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="language">Programming Language | 程式語言:</label>
+      <select id="language">
+        <option value="JavaScript">JavaScript</option>
+        <option value="Python">Python</option>
+        <option value="TypeScript">TypeScript</option>
+        <option value="Java">Java</option>
+        <option value="C#">C#</option>
+        <option value="C++">C++</option>
+        <option value="Go">Go</option>
+        <option value="Rust">Rust</option>
+        <option value="PHP">PHP</option>
+        <option value="Ruby">Ruby</option>
+        <option value="Swift">Swift</option>
+        <option value="Kotlin">Kotlin</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="customInput">Specific Requirements | 具體需求:</label>
+      <input type="text" id="customInput" placeholder="Enter specific details about what you want to create | 輸入您想創建的具體詳情">
+    </div>
+    
+    <div class="form-group">
+      <button onclick="generatePrompt()">Generate Prompt | 生成提示</button>
+      <button onclick="copyPrompt()">Copy to Clipboard | 複製到剪貼板</button>
+    </div>
+    
+    <div class="form-group">
+      <label for="output">Generated Copilot Prompt | 生成的 Copilot 提示:</label>
+      <textarea id="output" readonly placeholder="Your optimized Copilot prompt will appear here... | 您優化的 Copilot 提示將在此處顯示..."></textarea>
+    </div>
+    
+    <div class="prompt-type">
+      <strong>Tips for Better Copilot Prompts | 提示優化技巧:</strong>
+      <ul>
+        <li>Be specific about the programming language | 明確指定程式語言</li>
+        <li>Include context about the project | 包含專案背景資訊</li>
+        <li>Specify input/output requirements | 明確輸入/輸出要求</li>
+        <li>Mention any frameworks or libraries | 提及框架或函式庫</li>
+        <li>Include error handling preferences | 包含錯誤處理偏好</li>
+      </ul>
+    </div>
+  </div>
   
   <script>
-    function generateText() {
-      const dropdown = document.getElementById("wordSelect");
-      const custom = document.getElementById("customWord").value.trim();
-      const chosenWord = custom !== "" ? custom : dropdown.value;
+    const promptTemplates = {
+      function: {
+        template: "Create a {language} function that {requirement}. The function should:\n- Handle edge cases and errors\n- Include proper documentation\n- Follow best practices for {language}\n- Be well-structured and readable\n\nPlease include:\n- Function signature\n- Parameter validation\n- Return type specification\n- Example usage",
+        example: "Create a JavaScript function that validates email addresses"
+      },
+      class: {
+        template: "Design a {language} class for {requirement}. The class should:\n- Follow SOLID principles\n- Include proper encapsulation\n- Have comprehensive methods\n- Include constructor with validation\n- Add getter/setter methods where appropriate\n\nPlease include:\n- Class definition\n- Properties and methods\n- Constructor implementation\n- Documentation comments",
+        example: "Design a Python class for user authentication"
+      },
+      api: {
+        template: "Create a {language} implementation for {requirement}. The code should:\n- Handle HTTP requests/responses\n- Include proper error handling\n- Implement authentication if needed\n- Parse JSON data correctly\n- Follow RESTful principles\n\nPlease include:\n- API endpoint integration\n- Request/response handling\n- Error management\n- Data validation",
+        example: "Create a JavaScript implementation for GitHub API integration"
+      },
+      algorithm: {
+        template: "Implement a {language} solution for {requirement}. The algorithm should:\n- Be optimized for performance\n- Handle edge cases\n- Include complexity analysis\n- Be well-documented\n- Follow coding standards\n\nPlease include:\n- Algorithm implementation\n- Time/space complexity notes\n- Test cases\n- Usage examples",
+        example: "Implement a Python solution for binary search algorithm"
+      },
+      testing: {
+        template: "Create comprehensive {language} unit tests for {requirement}. The tests should:\n- Cover all edge cases\n- Include positive and negative scenarios\n- Use appropriate testing framework\n- Have clear test descriptions\n- Include setup and teardown\n\nPlease include:\n- Test suite structure\n- Mock data/dependencies\n- Assertion statements\n- Error case testing",
+        example: "Create comprehensive JavaScript unit tests for user registration function"
+      },
+      documentation: {
+        template: "Generate comprehensive documentation for {requirement} in {language}. Include:\n- Clear description of functionality\n- Parameter explanations\n- Return value details\n- Usage examples\n- Error scenarios\n\nPlease include:\n- API documentation\n- Code comments\n- README sections\n- Example implementations",
+        example: "Generate comprehensive documentation for user management API in Python"
+      },
+      debugging: {
+        template: "Help debug and fix {requirement} in {language}. Please:\n- Identify potential issues\n- Suggest debugging strategies\n- Provide corrected code\n- Explain the fixes\n- Add preventive measures\n\nPlease include:\n- Error analysis\n- Solution implementation\n- Testing recommendations\n- Best practices",
+        example: "Help debug and fix memory leak issues in JavaScript application"
+      },
+      optimization: {
+        template: "Optimize the performance of {requirement} in {language}. Focus on:\n- Reducing time complexity\n- Memory efficiency\n- Code readability\n- Maintainability\n- Following best practices\n\nPlease include:\n- Performance analysis\n- Optimized implementation\n- Benchmark comparisons\n- Improvement explanations",
+        example: "Optimize the performance of data processing pipeline in Python"
+      },
+      database: {
+        template: "Create {language} code for {requirement} with database operations. Include:\n- Efficient query design\n- Connection management\n- Error handling\n- Data validation\n- Transaction support\n\nPlease include:\n- Database connection setup\n- CRUD operations\n- Query optimization\n- Security considerations",
+        example: "Create Python code for user data management with PostgreSQL"
+      },
+      frontend: {
+        template: "Build a {language} frontend component for {requirement}. The component should:\n- Be responsive and accessible\n- Follow modern UI/UX principles\n- Include proper state management\n- Have clean, maintainable code\n- Support different screen sizes\n\nPlease include:\n- Component structure\n- Styling implementation\n- Event handling\n- Props/data management",
+        example: "Build a React frontend component for user profile editing"
+      },
+      backend: {
+        template: "Develop {language} backend logic for {requirement}. The implementation should:\n- Handle business logic efficiently\n- Include proper validation\n- Implement security measures\n- Support scalability\n- Follow clean architecture\n\nPlease include:\n- Service layer implementation\n- Data access patterns\n- Middleware integration\n- API endpoint design",
+        example: "Develop Node.js backend logic for e-commerce order processing"
+      },
+      security: {
+        template: "Implement security measures for {requirement} in {language}. Focus on:\n- Authentication and authorization\n- Data encryption\n- Input validation\n- SQL injection prevention\n- CSRF protection\n\nPlease include:\n- Security implementation\n- Vulnerability assessment\n- Best practices application\n- Testing strategies",
+        example: "Implement security measures for user authentication system in Java"
+      }
+    };
+
+    function generatePrompt() {
+      const promptType = document.getElementById("promptType").value;
+      const language = document.getElementById("language").value;
+      const customInput = document.getElementById("customInput").value.trim();
       
-      const text = `This page is all ${chosenWord}. Please explore for more ${chosenWord}.`;
-      document.getElementById("output").value = text;
+      if (!customInput) {
+        alert("Please enter specific requirements | 請輸入具體需求");
+        return;
+      }
+      
+      const template = promptTemplates[promptType];
+      let prompt = template.template
+        .replace(/{language}/g, language)
+        .replace(/{requirement}/g, customInput);
+      
+      document.getElementById("output").value = prompt;
     }
     
-    function copyText() {
+    function copyPrompt() {
       const output = document.getElementById("output");
+      if (!output.value.trim()) {
+        alert("Please generate a prompt first | 請先生成提示");
+        return;
+      }
+      
       output.select();
       output.setSelectionRange(0, 99999); // for mobile support
       navigator.clipboard.writeText(output.value)
-        .then(() => alert("Copied to clipboard!"))
+        .then(() => alert("Prompt copied to clipboard! | 提示已複製到剪貼板！"))
         .catch(err => alert("Failed to copy: " + err));
     }
+    
+    // Show example when prompt type changes
+    document.getElementById("promptType").addEventListener("change", function() {
+      const promptType = this.value;
+      const template = promptTemplates[promptType];
+      const placeholder = `Example: ${template.example} | 示例：${template.example}`;
+      document.getElementById("customInput").placeholder = placeholder;
+    });
+    
+    // Initialize with first option example
+    document.addEventListener('DOMContentLoaded', function() {
+      const firstOption = document.getElementById("promptType").value;
+      const template = promptTemplates[firstOption];
+      const placeholder = `Example: ${template.example} | 示例：${template.example}`;
+      document.getElementById("customInput").placeholder = placeholder;
+    });
   </script>
 </body>
 </html>
