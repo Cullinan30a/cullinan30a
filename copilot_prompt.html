@@ -75,6 +75,18 @@
       border-radius: 5px;
       resize: vertical;
       font-family: 'Courier New', monospace;
+      background-color: #fafafa;
+      transition: all 0.3s ease;
+    }
+    #output:focus {
+      border-color: #4CAF50;
+      background-color: #ffffff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+    #output:not(:placeholder-shown) {
+      background-color: #ffffff;
+      border-color: #4CAF50;
     }
     .prompt-type {
       background-color: #e3f2fd;
@@ -116,8 +128,6 @@
       margin: 15px 0;
     }
     .prompt-cards-container {
-      max-height: 400px;
-      overflow-y: auto;
       border: 1px solid #ddd;
       border-radius: 5px;
       padding: 15px;
@@ -135,6 +145,15 @@
       background: linear-gradient(90deg, #4CAF50, #2196F3);
       margin: 30px 0;
     }
+    kbd {
+      background-color: #f7f7f7;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-size: 11px;
+      font-family: monospace;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
@@ -148,18 +167,9 @@
         Copilot 提示語清單 (手機改 Code 專用) | Mobile Code Editing Prompts
       </h2>
       
-      <div class="form-group">
-        <label for="mobilePromptSelect">Quick Mobile Prompts | 快速手機提示:</label>
-        <select id="mobilePromptSelect">
-          <option value="">-- Select a mobile prompt template | 選擇手機提示模板 --</option>
-          <option value="changeText">1. 改文字 | Change Text</option>
-          <option value="changeColor">2. 改顏色 / 風格 | Change Colors/Styles</option>
-          <option value="addElement">3. 加新元素 | Add New Elements</option>
-          <option value="changeFunction">4. 改功能 | Change Functionality</option>
-          <option value="changeImage">5. 圖片 / 圖示 | Images/Icons</option>
-          <option value="locationHelp">6. 定位幫助 | Location Help</option>
-        </select>
-      </div>
+      <p style="margin-bottom: 20px; color: #666; font-size: 14px;">
+        Click on any prompt template below to copy it to the output box | 點擊下面任何提示模板將其複製到輸出框
+      </p>
 
       <div class="prompt-cards-container" id="promptCardsContainer">
         <div class="prompt-card" data-type="changeText">
@@ -270,8 +280,12 @@ Which file should I edit, and can you show me the code I need to update?
     </div>
     
     <div class="form-group">
-      <label for="output">Generated Copilot Prompt | 生成的 Copilot 提示:</label>
-      <textarea id="output" readonly placeholder="Your optimized Copilot prompt will appear here... | 您優化的 Copilot 提示將在此處顯示..."></textarea>
+      <label for="output">Generated Copilot Prompt | 生成的 Copilot 提示: <span style="color: #666; font-size: 12px; font-weight: normal;">(editable | 可編輯)</span></label>
+      <textarea id="output" placeholder="Your optimized Copilot prompt will appear here... | 您優化的 Copilot 提示將在此處顯示..."></textarea>
+      <div style="font-size: 12px; color: #666; margin-top: 5px;">
+        💡 <strong>Tip:</strong> You can edit the generated prompt above to fine-tune it. Press <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd>) to copy quickly. | 
+        您可以編輯上面生成的提示來進行微調。按 <kbd>Ctrl+Enter</kbd>（或 <kbd>Cmd+Enter</kbd>）快速複製。
+      </div>
     </div>
     
     <div class="prompt-type">
@@ -374,15 +388,30 @@ Which file should I edit, and can you show me the code I need to update?`
     function copyPrompt() {
       const output = document.getElementById("output");
       if (!output.value.trim()) {
-        alert("Please generate a prompt first | 請先生成提示");
+        alert("Please generate a prompt first or enter your own text | 請先生成提示或輸入您自己的文字");
         return;
       }
       
       output.select();
       output.setSelectionRange(0, 99999); // for mobile support
       navigator.clipboard.writeText(output.value)
-        .then(() => alert("Prompt copied to clipboard! | 提示已複製到剪貼板！"))
-        .catch(err => alert("Failed to copy: " + err));
+        .then(() => {
+          // Visual feedback
+          const originalBorder = output.style.borderColor;
+          output.style.borderColor = '#28a745';
+          output.style.backgroundColor = '#d4edda';
+          
+          alert("Prompt copied to clipboard! | 提示已複製到剪貼板！");
+          
+          // Reset visual feedback after a moment
+          setTimeout(() => {
+            output.style.borderColor = originalBorder;
+            output.style.backgroundColor = output.value ? '#ffffff' : '#fafafa';
+          }, 1500);
+        })
+        .catch(err => {
+          alert("Failed to copy: " + err + " | 複製失敗: " + err);
+        });
     }
     
     // Show example when prompt type changes
@@ -393,52 +422,79 @@ Which file should I edit, and can you show me the code I need to update?`
       document.getElementById("customInput").placeholder = placeholder;
     });
     
-    // Handle mobile prompt selection
-    document.getElementById("mobilePromptSelect").addEventListener("change", function() {
-      const selectedType = this.value;
-      const output = document.getElementById("output");
-      
-      // Clear previous selections
-      document.querySelectorAll('.prompt-card').forEach(card => {
-        card.classList.remove('selected');
-      });
-      
-      if (selectedType && mobilePrompts[selectedType]) {
-        // Copy the prompt to output
-        output.value = mobilePrompts[selectedType];
-        
-        // Highlight the selected card
-        const selectedCard = document.querySelector(`[data-type="${selectedType}"]`);
-        if (selectedCard) {
-          selectedCard.classList.add('selected');
-          selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        
-        // Show success message
-        output.style.borderColor = '#4CAF50';
-        setTimeout(() => {
-          output.style.borderColor = '#ddd';
-        }, 2000);
-      } else {
-        output.value = '';
-      }
-    });
-
     // Add click handlers to prompt cards
     document.querySelectorAll('.prompt-card').forEach(card => {
       card.addEventListener('click', function() {
         const cardType = this.getAttribute('data-type');
-        const select = document.getElementById("mobilePromptSelect");
+        const output = document.getElementById("output");
         
-        // Update select dropdown
-        select.value = cardType;
+        // Clear previous selections
+        document.querySelectorAll('.prompt-card').forEach(c => {
+          c.classList.remove('selected');
+        });
         
-        // Trigger the change event
-        select.dispatchEvent(new Event('change'));
+        // Select this card
+        this.classList.add('selected');
+        
+        if (cardType && mobilePrompts[cardType]) {
+          // Copy the prompt to output
+          output.value = mobilePrompts[cardType];
+          
+          // Show visual feedback
+          output.style.borderColor = '#4CAF50';
+          output.style.backgroundColor = '#ffffff';
+          
+          // Trigger input event to update character counter
+          output.dispatchEvent(new Event('input'));
+          
+          // Reset border color after a moment
+          setTimeout(() => {
+            output.style.borderColor = output.value ? '#4CAF50' : '#ddd';
+          }, 2000);
+          
+          // Scroll the output into view
+          output.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       });
       
       // Add hover effect
       card.style.cursor = 'pointer';
+    });
+    
+    // Add keyboard shortcut for copy (Ctrl+Enter or Cmd+Enter when focused on output)
+    document.getElementById("output").addEventListener("keydown", function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        copyPrompt();
+      }
+    });
+    
+    // Add character counter for the output textarea
+    const outputTextarea = document.getElementById("output");
+    const outputLabel = outputTextarea.previousElementSibling;
+    
+    outputTextarea.addEventListener('input', function() {
+      const charCount = this.value.length;
+      const existingCounter = outputLabel.querySelector('.char-counter');
+      
+      if (existingCounter) {
+        existingCounter.textContent = `${charCount} characters | ${charCount} 字符`;
+      } else {
+        const counter = document.createElement('span');
+        counter.className = 'char-counter';
+        counter.style.cssText = 'color: #666; font-size: 12px; font-weight: normal; margin-left: 10px;';
+        counter.textContent = `${charCount} characters | ${charCount} 字符`;
+        outputLabel.appendChild(counter);
+      }
+      
+      // Update background color based on content
+      if (this.value.trim()) {
+        this.style.backgroundColor = '#ffffff';
+        this.style.borderColor = '#4CAF50';
+      } else {
+        this.style.backgroundColor = '#fafafa';
+        this.style.borderColor = '#ddd';
+      }
     });
     
     // Initialize with first option example
