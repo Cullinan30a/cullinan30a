@@ -10,6 +10,16 @@ Hudson's comprehensive web tools collection featuring AI-powered prompt generato
 
 🌐 **Live Site**: [https://v0-cullinan30a.vercel.app/](https://v0-cullinan30a.vercel.app/)
 
+## Google Apps Script Configuration
+- **App Script ID**: 1lcO17egk_Jd7o9Al94MtO8UAUzzO49lYUdAJzAdRUCxN7dQ9OGgOm1nj
+- **Deployment ID**: AKfycbzLupXuHa5MjL5GyYYQMCukzfPFJz2q2pCDcI45H0voyA2IV1X3Y6g6oDAVJIA0PWFQ
+- **Web App URL**: https://script.google.com/macros/s/AKfycbzLupXuHa5MjL5GyYYQMCukzfPFJz2q2pCDcI45H0voyA2IV1X3Y6g6oDAVJIA0PWFQ/exec
+- **Passcode**: nucsup-vunset-4hyhnl
+- **ChatGPT Folder ID**: 1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd
+
+## Update History
+- **v1.0.1** (2025-08-09 11:11 GMT+8): Added version bar to index page and documented Google Apps Script configuration.
+
 ## 🚀 Featured Tools | 主要工具
 
 ### 1. 📱 Copilot Prompt Helper | Copilot 提示助手
