@@ -1,5 +1,11 @@
 # Cullinan30a Web Tools Collection | 工具集合
 
+## Latest Update (v6.2)
+
+- Added ABC Drive viewer page that fetches and lists files from the "chatgpt" Google Drive folder via Apps Script
+- Updated status bar to v6.2 with new timestamp
+- Updated: 2025-08-10 20:30 (GMT+8)
+
 Hudson's comprehensive web tools collection featuring AI-powere## 📋 Tool Details | 工具詳情
 
 ### Copilot Prompt Helper Workflow## 📋 Tool Details | 工具詳情
@@ -51,6 +57,15 @@ Hudson's comprehensive web tools collection featuring AI-powered prompt generato
 **Traditional AI prompt generation for various use cases**
 - Generate prompts for different AI applications
 - Customizable templates and parameters
+
+### 5. 📁 ABC Drive Viewer | ABC 雲端硬碟檢視器
+**Google Drive integration for file management**
+- **Google Apps Script Integration**: Connects to Google Drive via Apps Script web app
+- **Folder-Specific Listing**: Lists files from the "chatgpt" Google Drive folder
+- **File Operations**: View and download files directly from the interface
+- **Real-time Statistics**: Shows file counts, folder counts, and total sizes
+- **Responsive Design**: Mobile-friendly interface with bilingual support
+- **Auto-refresh**: Manual refresh capability to get latest file listings
 - 為各種 AI 應用生成提示
 
 ## 🛠️ Getting Started | 開始使用
