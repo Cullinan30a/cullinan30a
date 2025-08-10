@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Website Link | 添加網站連結</title>
+  <!-- Vercel KV Client -->
+  <script type="module">
+    import { kv } from '@vercel/kv';
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -213,9 +217,36 @@
   </div>
 
   <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      // 替換為你的 Firebase 配置
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const linksRef = database.ref('links');
+
     // Load saved links on page load
     document.addEventListener('DOMContentLoaded', function() {
-      displaySavedLinks();
+      // 監聽資料庫變化
+      linksRef.on('value', function(snapshot) {
+        const links = [];
+        snapshot.forEach(function(childSnapshot) {
+          links.unshift({
+            id: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+        displaySavedLinks(links);
+      });
       
       // Add event listener for fetch title button
       document.getElementById('fetchTitleBtn').addEventListener('click', fetchWebsiteTitle);
@@ -516,25 +547,24 @@
     });
     
     function saveLink(title, url) {
-      // Get existing links from localStorage
-      const savedLinks = JSON.parse(localStorage.getItem('websiteLinks') || '[]');
-      
       // Create new link object
       const newLink = {
-        id: Date.now(), // Simple ID based on timestamp
         title: title,
         url: url,
         addedAt: new Date().toISOString()
       };
       
-      // Add to beginning of array (newest first)
-      savedLinks.unshift(newLink);
-      
-      // Save back to localStorage
-      localStorage.setItem('websiteLinks', JSON.stringify(savedLinks));
-      
-      // Also update the main index page
-      updateIndexPage();
+      // Save to Firebase
+      linksRef.push(newLink)
+        .then(() => {
+          console.log('Link saved successfully');
+          // Update the main index page
+          updateIndexPage();
+        })
+        .catch((error) => {
+          console.error('Error saving link:', error);
+          showResult('error', '儲存失敗，請稍後再試 | Save failed, please try again later');
+        });
     }
     
     function updateIndexPage() {
@@ -544,11 +574,10 @@
       window.dispatchEvent(event);
     }
     
-    function displaySavedLinks() {
-      const savedLinks = JSON.parse(localStorage.getItem('websiteLinks') || '[]');
+    function displaySavedLinks(links) {
       const container = document.getElementById('savedLinksList');
       
-      if (savedLinks.length === 0) {
+      if (!links || links.length === 0) {
         container.innerHTML = '<p style="color: #666; font-style: italic;">No links saved yet | 尚未保存任何連結</p>';
         return;
       }
@@ -566,12 +595,15 @@
     
     function deleteLink(id) {
       if (confirm('Are you sure you want to delete this link? | 您確定要刪除此連結嗎？')) {
-        let savedLinks = JSON.parse(localStorage.getItem('websiteLinks') || '[]');
-        savedLinks = savedLinks.filter(link => link.id !== id);
-        localStorage.setItem('websiteLinks', JSON.stringify(savedLinks));
-        displaySavedLinks();
-        updateIndexPage();
-        showResult('success', 'Link deleted successfully | 連結刪除成功');
+        linksRef.child(id).remove()
+          .then(() => {
+            updateIndexPage();
+            showResult('success', 'Link deleted successfully | 連結刪除成功');
+          })
+          .catch((error) => {
+            console.error('Error deleting link:', error);
+            showResult('error', '刪除失敗，請稍後再試 | Delete failed, please try again later');
+          });
       }
     }
     

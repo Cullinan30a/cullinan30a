@@ -46,3 +46,4 @@ Vernon-website/
 
 # Cloned website files
 cloned_*.html
+.vercel
