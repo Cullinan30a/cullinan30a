@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ABC Drive Viewer - Simple Test | ABC 雲端硬碟檢視器 - 簡單測試</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .test-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .test-btn:hover {
+      background-color: #218838;
+    }
+    .test-btn:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      margin: 20px 0;
+    }
+    .error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .debug-info {
+      background-color: #e2e3e5;
+      border: 1px solid #d6d8db;
+      color: #383d41;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .files-list {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .file-item {
+      padding: 10px;
+      margin: 5px 0;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+    .file-name {
+      font-weight: bold;
+      color: #333;
+    }
+    .file-details {
+      color: #666;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Index | 返回索引</a>
+    
+    <h1>ABC Drive Viewer - Simple Test</h1>
+    <p class="subtitle">簡單測試版本 - 測試 Google Drive 資料夾存取</p>
+    
+    <button class="test-btn" id="testBtn" onclick="runSimpleTest()">
+      🧪 Run Simple Test | 執行簡單測試
+    </button>
+    
+    <div id="loading" class="loading" style="display: none;">
+      Testing connection to Google Drive... | 正在測試 Google Drive 連接...
+    </div>
+    
+    <div id="error" class="error" style="display: none;">
+      <!-- Error message will appear here -->
+    </div>
+    
+    <div id="success" class="success" style="display: none;">
+      <!-- Success message will appear here -->
+    </div>
+    
+    <div id="debugInfo" class="debug-info">
+      Debug information will appear here...<br>
+      調試資訊將在此顯示...
+    </div>
+    
+    <div id="filesList" class="files-list" style="display: none;">
+      <!-- Files will be listed here -->
+    </div>
+  </div>
+
+  <script>
+    // Google Apps Script Web App URL
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7HIAQwzbnInNBtiKYVbvjRAS5P5O-ZJNt4UdtzDKoxuZ7jMuLWdh2ttoN8k_OJHo7/exec';
+    
+    // Target folder ID
+    const FOLDER_ID = '1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd';
+    
+    let debugOutput = [];
+    
+    function addDebug(message) {
+      const timestamp = new Date().toISOString();
+      const debugMsg = `[${timestamp}] ${message}`;
+      debugOutput.push(debugMsg);
+      console.log(debugMsg);
+      updateDebugDisplay();
+    }
+    
+    function updateDebugDisplay() {
+      const debugDiv = document.getElementById('debugInfo');
+      debugDiv.innerHTML = debugOutput.join('\n');
+      debugDiv.scrollTop = debugDiv.scrollHeight;
+    }
+    
+    async function runSimpleTest() {
+      const testBtn = document.getElementById('testBtn');
+      const loadingDiv = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+      const successDiv = document.getElementById('success');
+      const filesDiv = document.getElementById('filesList');
+      
+      // Reset UI
+      testBtn.disabled = true;
+      loadingDiv.style.display = 'block';
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+      filesDiv.style.display = 'none';
+      
+      debugOutput = [];
+      addDebug('Starting simple test...');
+      addDebug(`Apps Script URL: ${APPS_SCRIPT_URL}`);
+      addDebug(`Target Folder ID: ${FOLDER_ID}`);
+      
+      try {
+        // Test 1: Basic connection
+        addDebug('Test 1: Basic connection test');
+        const testResponse = await fetch(APPS_SCRIPT_URL, {
+          method: 'GET',
+          mode: 'cors'
+        });
+        
+        addDebug(`Basic connection status: ${testResponse.status}`);
+        addDebug(`Basic connection ok: ${testResponse.ok}`);
+        
+        if (testResponse.ok) {
+          const testText = await testResponse.text();
+          addDebug(`Basic response length: ${testText.length} characters`);
+          addDebug(`Basic response preview: ${testText.substring(0, 100)}...`);
+        }
+        
+        // Test 2: Folder access test
+        addDebug('Test 2: Folder access test');
+        const folderUrl = `${APPS_SCRIPT_URL}?folderId=${FOLDER_ID}`;
+        addDebug(`Full request URL: ${folderUrl}`);
+        
+        const folderResponse = await fetch(folderUrl, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        addDebug(`Folder request status: ${folderResponse.status}`);
+        addDebug(`Folder request ok: ${folderResponse.ok}`);
+        
+        if (!folderResponse.ok) {
+          throw new Error(`HTTP ${folderResponse.status}: ${folderResponse.statusText}`);
+        }
+        
+        const responseText = await folderResponse.text();
+        addDebug(`Response length: ${responseText.length} characters`);
+        addDebug(`Raw response: ${responseText}`);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          addDebug(`JSON parsing successful`);
+          addDebug(`Parsed data keys: ${Object.keys(data).join(', ')}`);
+        } catch (parseError) {
+          addDebug(`JSON parsing failed: ${parseError.message}`);
+          throw new Error(`Invalid JSON response: ${parseError.message}`);
+        }
+        
+        if (data.error) {
+          addDebug(`Apps Script error: ${data.error}`);
+          throw new Error(data.error);
+        }
+        
+        if (data.success) {
+          addDebug(`Success! Found ${data.count || 0} items`);
+          addDebug(`Folder name: ${data.folder || 'Unknown'}`);
+          
+          showSuccess(`Test successful! Found ${data.count || 0} items in folder "${data.folder || 'Unknown'}"`);
+          
+          if (data.files && data.files.length > 0) {
+            displayFiles(data.files);
+          } else {
+            addDebug('No files found in the folder');
+          }
+        } else {
+          addDebug('Apps Script returned success=false');
+          throw new Error('Apps Script returned unsuccessful response');
+        }
+        
+      } catch (error) {
+        addDebug(`Error: ${error.message}`);
+        showError(`Test failed: ${error.message}`);
+      } finally {
+        loadingDiv.style.display = 'none';
+        testBtn.disabled = false;
+      }
+    }
+    
+    function displayFiles(files) {
+      const filesDiv = document.getElementById('filesList');
+      
+      let html = `<h3>📁 Found ${files.length} items:</h3>`;
+      
+      files.forEach((file, index) => {
+        html += `
+          <div class="file-item">
+            <div class="file-name">
+              ${file.type === 'folder' ? '📁' : '📄'} ${escapeHtml(file.name)}
+            </div>
+            <div class="file-details">
+              ID: ${file.id}<br>
+              Type: ${file.type || 'file'}<br>
+              ${file.size ? `Size: ${formatFileSize(file.size)}<br>` : ''}
+              ${file.mimeType ? `MIME: ${file.mimeType}<br>` : ''}
+              Modified: ${file.modifiedTime ? new Date(file.modifiedTime).toLocaleString() : 'Unknown'}
+            </div>
+          </div>
+        `;
+      });
+      
+      filesDiv.innerHTML = html;
+      filesDiv.style.display = 'block';
+    }
+    
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.innerHTML = `<strong>❌ Error:</strong> ${escapeHtml(message)}`;
+      errorDiv.style.display = 'block';
+    }
+    
+    function showSuccess(message) {
+      const successDiv = document.getElementById('success');
+      successDiv.innerHTML = `<strong>✅ Success:</strong> ${escapeHtml(message)}`;
+      successDiv.style.display = 'block';
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Initialize
+    addDebug('Simple Test Page loaded');
+    addDebug('Ready to test Apps Script connection');
+  </script>
+</body>
+</html>

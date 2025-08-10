@@ -225,10 +225,10 @@
 
   <script>
     // Google Apps Script Web App URL
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7HIAQwzbnInNBtiKYVbvjRAS5P5O-ZJNt4UdtzDKoxuZ7jMuLWdh2ttoN8k_OJHo7/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLupXuHa5MjL5GyYYQMCukzfPFJz2q2pCDcI45H0voyA2IV1X3Y6g6oDAVJIA0PWFQ/exec';
     
     // App Script ID: 1lcO17egk_Jd7o9Al94MtO8UAUzzO49lYUdAJzAdRUCxN7dQ9OGgOm1nj
-    // Deployment ID: AKfycbw7HIAQwzbnInNBtiKYVbvjRAS5P5O-ZJNt4UdtzDKoxuZ7jMuLWdh2ttoN8k_OJHo7
+    // Deployment ID: AKfycbzLupXuHa5MjL5GyYYQMCukzfPFJz2q2pCDcI45H0voyA2IV1X3Y6g6oDAVJIA0PWFQ
     
     let currentFiles = [];
     let debugLog = [];
@@ -276,9 +276,9 @@
       }
     }
     
-    // Fetch files from Google Drive via Apps Script using JSONP to avoid CORS
+    // Fetch files from Google Drive via Apps Script
     async function fetchFiles() {
-      addDebugLog('Starting fetchFiles() with JSONP approach');
+      addDebugLog('Starting fetchFiles()');
       const loadingDiv = document.getElementById('loading');
       const errorDiv = document.getElementById('error');
       const successDiv = document.getElementById('success');
@@ -295,8 +295,53 @@
       fileList.innerHTML = '';
       
       try {
-        // Try multiple approaches
-        await tryFetchMethods();
+        const requestUrl = `${APPS_SCRIPT_URL}?folder=chatgpt`;
+        addDebugLog(`Making request to: ${requestUrl}`);
+        
+        const response = await fetch(requestUrl, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        addDebugLog(`Response status: ${response.status} ${response.statusText}`);
+        addDebugLog(`Response headers: ${JSON.stringify([...response.headers])}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        
+        const responseText = await response.text();
+        addDebugLog(`Raw response: ${responseText}`);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          addDebugLog(`Parsed JSON data: ${JSON.stringify(data, null, 2)}`);
+        } catch (parseError) {
+          addDebugLog(`JSON parse error: ${parseError.message}`);
+          throw new Error(`Invalid JSON response: ${parseError.message}`);
+        }
+        
+        if (data.error) {
+          addDebugLog(`Apps Script returned error: ${data.error}`);
+          throw new Error(data.error);
+        }
+        
+        currentFiles = data.files || [];
+        addDebugLog(`Found ${currentFiles.length} files`);
+        
+        displayFiles(currentFiles);
+        displayStats(currentFiles);
+        
+        if (currentFiles.length > 0) {
+          showSuccess(`Successfully loaded ${currentFiles.length} files from the chatgpt folder!`);
+        } else {
+          showSuccess('Connected successfully, but no files found in the chatgpt folder.');
+        }
         
       } catch (error) {
         addDebugLog(`Error in fetchFiles: ${error.message}`);
@@ -305,119 +350,6 @@
       } finally {
         loadingDiv.style.display = 'none';
         refreshBtn.disabled = false;
-      }
-    }
-    
-    // Try different fetch methods to overcome CORS issues
-    async function tryFetchMethods() {
-      addDebugLog('Trying different fetch methods...');
-      
-      // Method 1: Standard fetch with cors using folder ID
-      try {
-        addDebugLog('Method 1: Standard CORS fetch with folder ID');
-        const response1 = await fetch(`${APPS_SCRIPT_URL}?folderId=1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd`, {
-          method: 'GET',
-          mode: 'cors'
-        });
-        
-        if (response1.ok) {
-          const text = await response1.text();
-          addDebugLog(`Method 1 response: ${text.substring(0, 200)}`);
-          await processResponse(text);
-          return;
-        }
-      } catch (e) {
-        addDebugLog(`Method 1 failed: ${e.message}`);
-      }
-      
-      // Method 2: JSONP approach
-      try {
-        addDebugLog('Method 2: JSONP approach');
-        await fetchWithJSONP();
-        return;
-      } catch (e) {
-        addDebugLog(`Method 2 failed: ${e.message}`);
-      }
-      
-      // Method 3: No-cors mode (limited response access)
-      try {
-        addDebugLog('Method 3: No-cors mode');
-        const response3 = await fetch(`${APPS_SCRIPT_URL}?folderId=1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd`, {
-          method: 'GET',
-          mode: 'no-cors'
-        });
-        addDebugLog(`Method 3 response status: ${response3.status}`);
-        addDebugLog('Note: Response body not accessible in no-cors mode');
-        showError('Apps Script responded but CORS policy prevents reading the response. Please check Apps Script deployment settings.');
-        return;
-      } catch (e) {
-        addDebugLog(`Method 3 failed: ${e.message}`);
-      }
-      
-      throw new Error('All fetch methods failed. Check Apps Script deployment and permissions.');
-    }
-    
-    // JSONP approach
-    function fetchWithJSONP() {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(data) {
-          addDebugLog(`JSONP callback received data: ${JSON.stringify(data, null, 2)}`);
-          processResponseData(data);
-          document.head.removeChild(script);
-          delete window[callbackName];
-          resolve();
-        };
-        
-        script.onerror = function() {
-          addDebugLog('JSONP script failed to load');
-          document.head.removeChild(script);
-          delete window[callbackName];
-          reject(new Error('JSONP request failed'));
-        };
-        
-        const url = `${APPS_SCRIPT_URL}?folderId=1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd&callback=${callbackName}`;
-        addDebugLog(`JSONP URL: ${url}`);
-        script.src = url;
-        document.head.appendChild(script);
-      });
-    }
-    
-    // Process response text
-    async function processResponse(responseText) {
-      addDebugLog(`Processing response: ${responseText}`);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        addDebugLog(`Parsed JSON data: ${JSON.stringify(data, null, 2)}`);
-      } catch (parseError) {
-        addDebugLog(`JSON parse error: ${parseError.message}`);
-        throw new Error(`Invalid JSON response: ${parseError.message}`);
-      }
-      
-      processResponseData(data);
-    }
-    
-    // Process response data
-    function processResponseData(data) {
-      if (data.error) {
-        addDebugLog(`Apps Script returned error: ${data.error}`);
-        throw new Error(data.error);
-      }
-      
-      currentFiles = data.files || [];
-      addDebugLog(`Found ${currentFiles.length} files`);
-      
-      displayFiles(currentFiles);
-      displayStats(currentFiles);
-      
-      if (currentFiles.length > 0) {
-        showSuccess(`Successfully loaded ${currentFiles.length} files from the chatgpt folder!`);
-      } else {
-        showSuccess('Connected successfully, but no files found in the chatgpt folder.');
       }
     }
     
