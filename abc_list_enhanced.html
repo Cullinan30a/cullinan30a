@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>ABC List (JSONP)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,Arial,Helvetica,sans-serif; padding: 20px; line-height: 1.6; background:#f8f9fa; }
+    .status-bar { text-align:center; background:#f0f0f0; padding:6px 10px; border-radius:8px; margin-bottom:16px; font-size:14px; }
+    h2 { margin: 8px 0 12px; text-align:center; }
+    #status { color:#666; text-align:center; margin:6px 0 10px; }
+    table { width:100%; border-collapse:collapse; background:#fff; }
+    th, td { padding:8px; border:1px solid #e5e7eb; text-align:left; }
+    th { background:#2563eb; color:#fff; }
+    tr:hover { background:#f9fafb; }
+    .tools { display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
+    .btn { padding:8px 12px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer; }
+    .btn:hover { background:#f7f7f7; }
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .back-button:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-button">← Back to Index | 返回索引</a>
+  <div id="statusBar" class="status-bar">v6.3 | Built: 2025-08-11 (GMT+8)</div>
+  <h2>ABC Drive File List — JSONP</h2>
+
+  <div class="tools">
+    <button id="btnPing" class="btn">Test Connection</button>
+    <button id="btnList" class="btn">Refresh Files</button>
+  </div>
+  <div id="status">Ready.</div>
+
+  <table>
+    <thead>
+      <tr><th>File Name</th><th>Last Updated</th><th>Open</th></tr>
+    </thead>
+    <tbody id="fileTable"></tbody>
+  </table>
+
+  <script>
+    const EXEC_URL  = "https://script.google.com/macros/s/AKfycbyAlKBYmlXNa_dwdyfrMN56_amEOiqwQVKoOvE26YsTk8_Foo_QHHZbSbn63UKl9Jai/exec";
+    const PASSCODE  = "nucsup-vunset-4hyhnI";
+    const FOLDER_ID = "1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd";
+
+    const $ = id => document.getElementById(id);
+    const setStatus = m => ($('status').textContent = m);
+
+    function jsonp(baseUrl, params){
+      return new Promise((resolve, reject) => {
+        const cb = 'cb_' + Math.random().toString(36).slice(2);
+        params = Object.assign({}, params, { callback: cb });
+        const qs = new URLSearchParams(params).toString();
+        const s = document.createElement('script');
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + qs;
+        const timeout = setTimeout(()=>{ cleanup(); reject(new Error('JSONP timeout')); }, 15000);
+        function cleanup(){ clearTimeout(timeout); try{document.body.removeChild(s);}catch(e){} try{delete window[cb];}catch(e){} }
+        window[cb] = (data)=>{ cleanup(); resolve(data); };
+        s.onerror = ()=>{ cleanup(); reject(new Error('JSONP network error')); };
+        s.src = url;
+        document.body.appendChild(s);
+      });
+    }
+
+    async function testConnection(){
+      try{
+        setStatus('Pinging…');
+        const data = await jsonp(EXEC_URL, { action:'ping', passcode: PASSCODE });
+        setStatus(data?.success ? 'Ping OK' : 'Ping failed');
+        console.log('Ping:', data);
+      }catch(err){ setStatus('Ping error: ' + err.message); }
+    }
+
+    function render(files){
+      const tbody = $('fileTable'); tbody.innerHTML = '';
+      (files||[]).forEach(f => {
+        const tr = document.createElement('tr');
+        const dt = f.updatedTime || f.date || f.modifiedTime || new Date().toISOString();
+        const url = f.url || ('https://drive.google.com/file/d/' + (f.id||'') + '/view');
+        tr.innerHTML = `<td>${(f.name||'').replace(/</g,'&lt;')}</td>
+                        <td>${new Date(dt).toLocaleString('zh-HK')}</td>
+                        <td><a href="${url}" target="_blank" rel="noopener">Open</a></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function fetchFiles(){
+      try{
+        setStatus('Fetching list…');
+        const data = await jsonp(EXEC_URL, { action:'list', folderId: FOLDER_ID, passcode: PASSCODE });
+        if (!data || data.success !== true) throw new Error(data && data.message ? data.message : 'Unknown error');
+        render(data.files);
+        setStatus(`Loaded ${data.count ?? (data.files?.length||0)} items`);
+      }catch(err){ setStatus('Fetch error: ' + err.message); }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchFiles);
+    $('btnPing').addEventListener('click', testConnection);
+    $('btnList').addEventListener('click', fetchFiles);
+  </script>
+</body>
+</html>
