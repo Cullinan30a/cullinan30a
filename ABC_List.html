@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ABC List</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h2>ABC List - Google Drive Folder JSON</h2>
+  <div id="output">Loading...</div>
+
+  <script>
+    const PASSCODE = "nucsup-vunset-4hyhnI";
+    const FOLDER_ID = "1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd";
+    const API_URL = `https://script.google.com/macros/s/AKfycbyAlKBYmlXNa_dwdyfrMN56_amEOiqwQVKoOvE26YsTk8_Foo_QHHZbSbn63UKl9Jai/exec?action=list&passcode=${PASSCODE}&folderId=${FOLDER_ID}`;
+
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("output").innerHTML =
+          `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      })
+      .catch(err => {
+        document.getElementById("output").innerHTML = `<span style="color:red;">Error: ${err}</span>`;
+      });
+  </script>
+</body>
+</html>
