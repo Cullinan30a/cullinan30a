@@ -4,28 +4,62 @@
   <meta charset="UTF-8">
   <title>ABC List</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+    body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.5; }
+    h2 { margin-top: 0; }
+    pre { background: #f7f7f7; padding: 12px; border: 1px solid #eee; border-radius: 6px; overflow:auto; max-height: 70vh; }
+    .btn { padding:8px 12px; margin-right:8px; }
   </style>
 </head>
 <body>
   <h2>ABC List - Google Drive Folder JSON</h2>
-  <div id="output">Loading...</div>
+  <div>
+    <button id="btnPing" class="btn">Test Connection</button>
+    <button id="btnList" class="btn">Refresh Files</button>
+    <span id="status" style="margin-left:10px;color:#666">Ready.</span>
+  </div>
+  <pre id="output">[json output here]</pre>
 
   <script>
-    const PASSCODE = "nucsup-vunset-4hyhnI";
+    // === REAL CONFIG ===
+    const PASSCODE  = "nucsup-vunset-4hyhnI";
     const FOLDER_ID = "1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd";
-    const API_URL = `https://script.google.com/macros/s/AKfycbyAlKBYmlXNa_dwdyfrMN56_amEOiqwQVKoOvE26YsTk8_Foo_QHHZbSbn63UKl9Jai/exec?action=list&passcode=${PASSCODE}&folderId=${FOLDER_ID}`;
+    const EXEC_URL  = "https://script.google.com/macros/s/AKfycbyAlKBYmlXNa_dwdyfrMN56_amEOiqwQVKoOvE26YsTk8_Foo_QHHZbSbn63UKl9Jai/exec";
 
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("output").innerHTML =
-          `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-      })
-      .catch(err => {
-        document.getElementById("output").innerHTML = `<span style="color:red;">Error: ${err}</span>`;
-      });
+    const $ = id => document.getElementById(id);
+    const setStatus = msg => { $('status').textContent = msg; };
+    const showJSON = obj => { $('output').textContent = JSON.stringify(obj, null, 2); };
+
+    async function testConnection(){
+      try{
+        setStatus('Pinging…');
+        const url = `${EXEC_URL}?action=ping&passcode=${encodeURIComponent(PASSCODE)}`;
+        const res = await fetch(url, { method:'GET', mode:'cors' });
+        const data = await res.json();
+        showJSON(data);
+        setStatus(data?.success ? 'Ping OK' : 'Ping failed');
+      }catch(err){
+        showJSON({ success:false, error:String(err) });
+        setStatus('Ping error');
+      }
+    }
+
+    async function fetchFiles(){
+      try{
+        setStatus('Fetching list…');
+        const qs = new URLSearchParams({ action:'list', folderId:FOLDER_ID, passcode:PASSCODE });
+        const res = await fetch(`${EXEC_URL}?${qs.toString()}`, { method:'GET', mode:'cors' });
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        showJSON(data);
+        setStatus(data?.success ? `Loaded ${data.count ?? (data.files?.length || 0)} items` : 'Fetch failed');
+      }catch(err){
+        showJSON({ success:false, error:String(err) });
+        setStatus('Fetch error（可能是 CORS 或權限）');
+      }
+    }
+
+    $('btnPing').addEventListener('click', testConnection);
+    $('btnList').addEventListener('click', fetchFiles);
   </script>
 </body>
 </html>
