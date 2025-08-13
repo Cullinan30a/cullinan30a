@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ABC Drive Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f8f9fa;
+    }
+    .version-bar {
+      text-align: center;
+      background: #e9ecef;
+      padding: 6px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #dee2e6;
+      text-align: left;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    tr:hover {
+      background: #f1f3f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="version-bar">
+    Version: <span id="version"></span> | Last Updated: <span id="updateTime"></span>
+  </div>
+  <h2>ABC Drive File List</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>File Name</th>
+        <th>Last Updated</th>
+        <th>Open</th>
+      </tr>
+    </thead>
+    <tbody id="fileTable"></tbody>
+  </table>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyAlKBYmlXNa_dwdyfrMN56_amEOiqwQVKoOvE26YsTk8_Foo_QHHZbSbn63UKl9Jai/exec";
+    const passcode = "nucsup-vunset-4hyhnI";
+
+    document.getElementById("version").textContent = "v1.0";
+    document.getElementById("updateTime").textContent = new Date().toLocaleString("zh-HK");
+
+    function fetchFiles() {
+      const cbName = "cb_" + Date.now();
+      window[cbName] = function (data) {
+        if (data.success) {
+          const tbody = document.getElementById("fileTable");
+          tbody.innerHTML = "";
+          data.files.forEach(file => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${file.name}</td>
+              <td>${new Date(file.date).toLocaleString("zh-HK")}</td>
+              <td><a href="${file.url}" target="_blank">Open</a></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          alert(data.message || "Error loading files");
+        }
+        delete window[cbName];
+      };
+
+      const script = document.createElement("script");
+      script.src = `${scriptURL}?passcode=${encodeURIComponent(passcode)}&callback=${cbName}`;
+      document.body.appendChild(script);
+    }
+
+    fetchFiles();
+  </script>
+</body>
+</html>
