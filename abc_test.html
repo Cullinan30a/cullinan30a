@@ -1,333 +1,277 @@
-<!DOCTYPE html>
-<html lang="en-US">
+<!doctype html>
+<html lang="zh-HK">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ABC Drive Viewer - Simple Test | ABC 雲端硬碟檢視器 - 簡單測試</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Speech Sandbox v6.7 · 兩版本自述稿 · 一鍵語音播放</title>
+  <meta name="description" content="兩段內容即貼即播，支援粵語（zh-HK）語音合成、情緒預設、語速音高調整。">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-      background-color: #f5f5f5;
-    }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 10px;
-    }
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 30px;
-      font-style: italic;
-    }
-    .back-link {
-      display: inline-block;
-      margin-bottom: 20px;
-      color: #007bff;
-      text-decoration: none;
-      font-size: 14px;
-    }
-    .back-link:hover {
-      text-decoration: underline;
-    }
-    .test-btn {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-      margin-bottom: 20px;
-    }
-    .test-btn:hover {
-      background-color: #218838;
-    }
-    .test-btn:disabled {
-      background-color: #6c757d;
-      cursor: not-allowed;
-    }
-    .loading {
-      text-align: center;
-      color: #666;
-      font-style: italic;
-      margin: 20px 0;
-    }
-    .error {
-      background-color: #f8d7da;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-    .success {
-      background-color: #d4edda;
-      border: 1px solid #c3e6cb;
-      color: #155724;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-    .debug-info {
-      background-color: #e2e3e5;
-      border: 1px solid #d6d8db;
-      color: #383d41;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-      font-family: monospace;
-      font-size: 12px;
-      white-space: pre-wrap;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .files-list {
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-    .file-item {
-      padding: 10px;
-      margin: 5px 0;
-      background-color: white;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-    }
-    .file-name {
-      font-weight: bold;
-      color: #333;
-    }
-    .file-details {
-      color: #666;
-      font-size: 14px;
-      margin-top: 5px;
-    }
+    :root { --bg:#0b0f14; --card:#121821; --ink:#eef3ff; --muted:#a7b0c2; --primary:#5cc8ff; --accent:#ffd166; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,PingFang HK,PingFang TC,Helvetica,Arial}
+    .wrap{max-width:980px;margin:40px auto;padding:0 16px}
+    h1{font-size:1.6rem;margin:0 0 12px}
+    .sub{color:var(--muted);margin-bottom:24px}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+    .panel{background:var(--card);border:1px solid #1e2633;border-radius:16px;padding:16px}
+    textarea{width:100%;min-height:160px;border-radius:12px;border:1px solid #253045;background:#0e141c;color:var(--ink);padding:12px;line-height:1.6}
+    label{display:block;margin-bottom:8px;color:var(--muted)}
+    .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px}
+    button{appearance:none;border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;color:#071018;background:var(--primary)}
+    button.secondary{background:#263447;color:var(--ink)}
+    button.warn{background:var(--accent)}
+    select,input[type="range"]{background:#0e141c;color:var(--ink);border:1px solid #253045;border-radius:10px;padding:8px}
+    .card{background:linear-gradient(180deg,#141c28,#0f1520);border:1px solid #1f2a3a;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+    .card h3{margin:0 0 4px}
+    .scr{white-space:pre-wrap;line-height:1.7;color:#dfe7ff;background:#0b111a;border-radius:12px;padding:12px;border:1px solid #1d2736;max-height:300px;overflow:auto}
+    .tag{font-size:.8rem;color:#9fb2cc;border:1px solid #2a3a52;border-radius:999px;padding:4px 10px;display:inline-block}
+    .pill{display:inline-flex;gap:8px;align-items:center}
+    .muted{color:var(--muted)}
+    .banner{position:sticky;top:0;z-index:9999;background:#0b0f14;border-bottom:1px solid #1e2633;padding:8px 12px;display:flex;gap:8px;align-items:center}
+    .banner a{color:#5cc8ff;text-decoration:none;font-weight:700}
   </style>
 </head>
 <body>
-  <div class="container">
-    <a href="index.html" class="back-link">← Back to Index | 返回索引</a>
-    
-    <h1>ABC Drive Viewer - Simple Test</h1>
-    <p class="subtitle">簡單測試版本 - 測試 Google Drive 資料夾存取</p>
-    
-    <button class="test-btn" id="testBtn" onclick="runSimpleTest()">
-      🧪 Run Simple Test | 執行簡單測試
-    </button>
-    
-    <div id="loading" class="loading" style="display: none;">
-      Testing connection to Google Drive... | 正在測試 Google Drive 連接...
+  <!-- version: v6.7 (2025-08-14) -->
+  <div class="banner">
+    <a href="index.html">← 返回首頁</a>
+    <span>Speech Sandbox v6.7 · 粵語語音合成</span>
+  </div>
+
+  <div class="wrap">
+    <h1>🎙 兩版本自述稿 · 一鍵語音播放</h1>
+    <div class="sub">貼上內容 ▶ 更新到頁面 ▶ 按播放；可選聲線、語速、音高；支援「專業＋震撼」與「溫暖＋關懷」情緒預設。</div>
+
+    <div class="panel">
+      <div class="grid">
+        <div>
+          <label for="input1">Option 1（專業＋震撼）</label>
+          <textarea id="input1">大家好，
+今日我想同你分享，
+一份真正可以改變生活嘅保障方案。
+
+呢份宏伴護航危疾入息保障，
+唔止係一份保險，
+佢係一份長期承諾，
+畀你同你嘅家人，
+面對人生最艱難嘅時候，
+都可以堅持落去。
+
+當你遇上癌症，
+心臟病，
+中風等重大疾病，
+唔止醫療費用飆升，
+仲有收入中斷嘅壓力。
+
+但係，
+呢份保障提供多次賠償，
+高達名義金額四倍，
+仲可以覆蓋早期危疾，
+補足你保障上嘅缺口。
+
+最重要嘅係，
+一旦確診嚴重危疾，
+保費全免，
+保障繼續有效，
+冇中斷，
+冇後顧之憂。
+
+喺關鍵時刻，
+佢係你最堅固嘅盾牌，
+守護你嘅收入，
+穩定你嘅未來。</textarea>
+        </div>
+        <div>
+          <label for="input2">Option 2（溫暖＋關懷）</label>
+          <textarea id="input2">大家好，
+今日想同大家傾一傾，
+點樣為自己同家人，
+加多一份安全感。
+
+我哋永遠唔知，
+明天會發生咩事，
+可能係一次醫生嘅診斷，
+就令到生活同收入，
+發生翻天覆地嘅變化。
+
+宏伴護航危疾入息保障，
+就係希望喺呢啲時候，
+成為你背後嘅支撐。
+
+佢唔單止會喺你患上嚴重疾病時，
+提供一次賠償，
+仲可以多次索償，
+涵蓋癌症，
+心臟病，
+中風等多種高風險疾病。
+
+如果你需要長時間康復，
+保費仲會自動豁免，
+保障繼續生效，
+唔使擔心中途停止。
+
+因為我知道，
+當你專心養好身體嘅時候，
+冇咗經濟壓力，
+先可以真正安心。
+
+呢份保障，
+唔只係保單上嘅條款，
+佢係一份真心守護，
+令你同家人，
+繼續向前。</textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:18px">
+        <div class="pill"><span class="muted">🎚 聲線</span>
+          <select id="voiceSelect"><option>載入中…</option></select>
+        </div>
+        <div class="pill"><span class="muted">⏱ 語速</span>
+          <input id="rate" type="range" min="0.6" max="1.6" step="0.05" value="1.05"/>
+        </div>
+        <div class="pill"><span class="muted">🎵 音高</span>
+          <input id="pitch" type="range" min="0.7" max="1.6" step="0.05" value="1.05"/>
+        </div>
+        <button id="apply" class="warn">更新到頁面</button>
+        <button id="stopAll" class="secondary">■ 全部停止</button>
+      </div>
+      <div class="row">
+        <span class="tag">優先使用 zh‑HK 聲線</span>
+        <span class="tag">自動分句：逗號/句號/換行</span>
+        <span class="tag">行動觸發才能發聲（瀏覽器限制）</span>
+      </div>
     </div>
-    
-    <div id="error" class="error" style="display: none;">
-      <!-- Error message will appear here -->
-    </div>
-    
-    <div id="success" class="success" style="display: none;">
-      <!-- Success message will appear here -->
-    </div>
-    
-    <div id="debugInfo" class="debug-info">
-      Debug information will appear here...<br>
-      調試資訊將在此顯示...
-    </div>
-    
-    <div id="filesList" class="files-list" style="display: none;">
-      <!-- Files will be listed here -->
+
+    <div class="grid" style="margin-top:18px">
+      <div class="card">
+        <h3>Option 1（專業＋震撼）</h3>
+        <div class="row">
+          <button id="play1">▶ 播放</button>
+          <button id="preset1" class="secondary">⚡ 情緒預設：專業＋震撼</button>
+          <button id="copy1" class="secondary">⧉ 複製全文</button>
+        </div>
+        <div id="out1" class="scr"></div>
+      </div>
+      <div class="card">
+        <h3>Option 2（溫暖＋關懷）</h3>
+        <div class="row">
+          <button id="play2">▶ 播放</button>
+          <button id="preset2" class="secondary">💛 情緒預設：溫暖＋關懷</button>
+          <button id="copy2" class="secondary">⧉ 複製全文</button>
+        </div>
+        <div id="out2" class="scr"></div>
+      </div>
     </div>
   </div>
 
   <script>
-    // Google Apps Script Web App URL
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7HIAQwzbnInNBtiKYVbvjRAS5P5O-ZJNt4UdtzDKoxuZ7jMuLWdh2ttoN8k_OJHo7/exec';
-    
-    // Target folder ID
-    const FOLDER_ID = '1dVrvGaIwFAaM4qdWxk_DLeKnYbIJjxxd';
-    
-    let debugOutput = [];
-    
-    function addDebug(message) {
-      const timestamp = new Date().toISOString();
-      const debugMsg = `[${timestamp}] ${message}`;
-      debugOutput.push(debugMsg);
-      console.log(debugMsg);
-      updateDebugDisplay();
+    const $ = s => document.querySelector(s);
+    const voicesState = { voices: [] };
+
+    function splitIntoChunks(text) {
+      return text
+        .split(/(?<=[，、。！？\n])/)
+        .map(s => s.trim())
+        .filter(Boolean);
     }
-    
-    function updateDebugDisplay() {
-      const debugDiv = document.getElementById('debugInfo');
-      debugDiv.innerHTML = debugOutput.join('\n');
-      debugDiv.scrollTop = debugDiv.scrollHeight;
-    }
-    
-    async function runSimpleTest() {
-      const testBtn = document.getElementById('testBtn');
-      const loadingDiv = document.getElementById('loading');
-      const errorDiv = document.getElementById('error');
-      const successDiv = document.getElementById('success');
-      const filesDiv = document.getElementById('filesList');
-      
-      // Reset UI
-      testBtn.disabled = true;
-      loadingDiv.style.display = 'block';
-      errorDiv.style.display = 'none';
-      successDiv.style.display = 'none';
-      filesDiv.style.display = 'none';
-      
-      debugOutput = [];
-      addDebug('Starting simple test...');
-      addDebug(`Apps Script URL: ${APPS_SCRIPT_URL}`);
-      addDebug(`Target Folder ID: ${FOLDER_ID}`);
-      
-      try {
-        // Test 1: Basic connection
-        addDebug('Test 1: Basic connection test');
-        const testResponse = await fetch(APPS_SCRIPT_URL, {
-          method: 'GET',
-          mode: 'cors'
-        });
-        
-        addDebug(`Basic connection status: ${testResponse.status}`);
-        addDebug(`Basic connection ok: ${testResponse.ok}`);
-        
-        if (testResponse.ok) {
-          const testText = await testResponse.text();
-          addDebug(`Basic response length: ${testText.length} characters`);
-          addDebug(`Basic response preview: ${testText.substring(0, 100)}...`);
-        }
-        
-        // Test 2: Folder access test
-        addDebug('Test 2: Folder access test');
-        const folderUrl = `${APPS_SCRIPT_URL}?folderId=${FOLDER_ID}`;
-        addDebug(`Full request URL: ${folderUrl}`);
-        
-        const folderResponse = await fetch(folderUrl, {
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        addDebug(`Folder request status: ${folderResponse.status}`);
-        addDebug(`Folder request ok: ${folderResponse.ok}`);
-        
-        if (!folderResponse.ok) {
-          throw new Error(`HTTP ${folderResponse.status}: ${folderResponse.statusText}`);
-        }
-        
-        const responseText = await folderResponse.text();
-        addDebug(`Response length: ${responseText.length} characters`);
-        addDebug(`Raw response: ${responseText}`);
-        
-        let data;
-        try {
-          data = JSON.parse(responseText);
-          addDebug(`JSON parsing successful`);
-          addDebug(`Parsed data keys: ${Object.keys(data).join(', ')}`);
-        } catch (parseError) {
-          addDebug(`JSON parsing failed: ${parseError.message}`);
-          throw new Error(`Invalid JSON response: ${parseError.message}`);
-        }
-        
-        if (data.error) {
-          addDebug(`Apps Script error: ${data.error}`);
-          throw new Error(data.error);
-        }
-        
-        if (data.success) {
-          addDebug(`Success! Found ${data.count || 0} items`);
-          addDebug(`Folder name: ${data.folder || 'Unknown'}`);
-          
-          showSuccess(`Test successful! Found ${data.count || 0} items in folder "${data.folder || 'Unknown'}"`);
-          
-          if (data.files && data.files.length > 0) {
-            displayFiles(data.files);
-          } else {
-            addDebug('No files found in the folder');
-          }
-        } else {
-          addDebug('Apps Script returned success=false');
-          throw new Error('Apps Script returned unsuccessful response');
-        }
-        
-      } catch (error) {
-        addDebug(`Error: ${error.message}`);
-        showError(`Test failed: ${error.message}`);
-      } finally {
-        loadingDiv.style.display = 'none';
-        testBtn.disabled = false;
-      }
-    }
-    
-    function displayFiles(files) {
-      const filesDiv = document.getElementById('filesList');
-      
-      let html = `<h3>📁 Found ${files.length} items:</h3>`;
-      
-      files.forEach((file, index) => {
-        html += `
-          <div class="file-item">
-            <div class="file-name">
-              ${file.type === 'folder' ? '📁' : '📄'} ${escapeHtml(file.name)}
-            </div>
-            <div class="file-details">
-              ID: ${file.id}<br>
-              Type: ${file.type || 'file'}<br>
-              ${file.size ? `Size: ${formatFileSize(file.size)}<br>` : ''}
-              ${file.mimeType ? `MIME: ${file.mimeType}<br>` : ''}
-              Modified: ${file.modifiedTime ? new Date(file.modifiedTime).toLocaleString() : 'Unknown'}
-            </div>
-          </div>
-        `;
+
+    function populateVoices() {
+      const select = $('#voiceSelect');
+      const all = speechSynthesis.getVoices();
+      voicesState.voices = all;
+
+      const preferred = all.filter(v =>
+        /zh/i.test(v.lang) && /(HK|Hant)/i.test(v.lang) || /yue|canton/i.test(v.name)
+      );
+
+      const list = preferred.length ? preferred : all;
+      select.innerHTML = '';
+      list.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = `${v.name}  ·  ${v.lang}`;
+        select.appendChild(opt);
       });
-      
-      filesDiv.innerHTML = html;
-      filesDiv.style.display = 'block';
     }
-    
-    function showError(message) {
-      const errorDiv = document.getElementById('error');
-      errorDiv.innerHTML = `<strong>❌ Error:</strong> ${escapeHtml(message)}`;
-      errorDiv.style.display = 'block';
+
+    function pickVoiceByName(name) {
+      return voicesState.voices.find(v => v.name === name) || null;
     }
-    
-    function showSuccess(message) {
-      const successDiv = document.getElementById('success');
-      successDiv.innerHTML = `<strong>✅ Success:</strong> ${escapeHtml(message)}`;
-      successDiv.style.display = 'block';
+
+    function stopAll() {
+      speechSynthesis.cancel();
     }
-    
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+
+    function speakText(text, { rate=1.05, pitch=1.05, voice=null } = {}) {
+      stopAll();
+      const chunks = splitIntoChunks(text);
+      let i = 0;
+
+      function speakNext() {
+        if (i >= chunks.length) return;
+        const u = new SpeechSynthesisUtterance(chunks[i]);
+        if (voice) u.voice = voice;
+        u.lang = (voice && voice.lang) || 'zh-HK';
+        u.rate = rate;
+        u.pitch = pitch;
+        u.onend = () => { i++; speakNext(); };
+        speechSynthesis.speak(u);
+      }
+      speakNext();
     }
-    
-    function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+    function applyToPage() {
+      $('#out1').textContent = $('#input1').value.trim();
+      $('#out2').textContent = $('#input2').value.trim();
     }
-    
-    // Initialize
-    addDebug('Simple Test Page loaded');
-    addDebug('Ready to test Apps Script connection');
+
+    function copyText(elId) {
+      const text = $(elId).textContent;
+      navigator.clipboard.writeText(text);
+    }
+
+    function presetProfessional() {
+      $('#rate').value = 1.15;
+      $('#pitch').value = 1.0;
+    }
+    function presetWarm() {
+      $('#rate').value = 0.92;
+      $('#pitch').value = 1.18;
+    }
+
+    $('#apply').addEventListener('click', applyToPage);
+    $('#stopAll').addEventListener('click', stopAll);
+    $('#copy1').addEventListener('click', () => copyText('#out1'));
+    $('#copy2').addEventListener('click', () => copyText('#out2'));
+    $('#preset1').addEventListener('click', presetProfessional);
+    $('#preset2').addEventListener('click', presetWarm);
+
+    $('#play1').addEventListener('click', () => {
+      const voice = pickVoiceByName($('#voiceSelect').value);
+      speakText($('#out1').textContent, {
+        rate: parseFloat($('#rate').value),
+        pitch: parseFloat($('#pitch').value),
+        voice
+      });
+    });
+
+    $('#play2').addEventListener('click', () => {
+      const voice = pickVoiceByName($('#voiceSelect').value);
+      speakText($('#out2').textContent, {
+        rate: parseFloat($('#rate').value),
+        pitch: parseFloat($('#pitch').value),
+        voice
+      });
+    });
+
+    if ('speechSynthesis' in window) {
+      speechSynthesis.onvoiceschanged = populateVoices;
+      populateVoices();
+    } else {
+      $('#voiceSelect').innerHTML = '<option>此瀏覽器不支援語音合成</option>';
+    }
+    applyToPage();
   </script>
 </body>
 </html>
