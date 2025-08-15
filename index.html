@@ -98,10 +98,10 @@
 </head>
 
 <body>
-  <!-- version: v6.7 (2025-08-14) -->
-  <div class="status-bar">v6.7 | Updated: 2025-08-14 14:00 (GMT+8) | Added Speech Sandbox + Fixed ABC List corruption +
-    NEW Apps Script URL
-  </div>
+  <!-- version: v6.8 (2025-08-15) -->
+  <div class="status-bar">v6.8 | Updated: 2025-08-15 16:00 (GMT+8) | Voice Content Speaker v6.8 with Apps Script
+    integration + Male voice priority</div>
+
   <h2>Website Pages Index | 網站頁面索引</h2>
   <p>Select a page to visit: | 選擇要訪問的頁面：</p>
 
@@ -121,7 +121,6 @@
   </div>
 
   <script>
-    // Define your HTML pages here
     const pages = [
       { title: "AI Prompt Generator | AI 提示生成器", file: "ai_prompt_generator.html" },
       { title: "Copilot Prompt Helper | Copilot 提示助手", file: "copilot_prompt.html" },
@@ -129,12 +128,11 @@
       { title: "ABC Drive Viewer | ABC 雲端硬碟檢視器", file: "abc.html" },
       { title: "ABC List (JSONP) | ABC 檔案列表", file: "ABC_List.html" },
       { title: "ABC List Enhanced (JSONP) | ABC 檔案列表增強版", file: "abc_list_enhanced.html" },
-      { title: "Speech Sandbox (Audio) | 兩版本自述稿 · 一鍵語音播放", file: "abc_test.html" }
+      { title: "Voice Content Speaker v6.8 | 語音內容播放器 + 資料面板", file: "voice.html" }
     ];
 
     const pageList = document.getElementById("pageList");
 
-    // Create bullet point list items for built-in pages
     pages.forEach(page => {
       const listItem = document.createElement("li");
       listItem.className = "page-item";
@@ -145,7 +143,6 @@
       pageList.appendChild(listItem);
     });
 
-    // Load and display user-added links
     function loadUserLinks() {
       const savedLinks = JSON.parse(localStorage.getItem('websiteLinks') || '[]');
       const userLinksSection = document.getElementById('userLinksSection');
@@ -175,17 +172,14 @@
       return div.innerHTML;
     }
 
-    // Load user links on page load
     loadUserLinks();
 
-    // Listen for storage changes (when links are added/removed)
     window.addEventListener('storage', function (e) {
       if (e.key === 'websiteLinks') {
         loadUserLinks();
       }
     });
 
-    // Also listen for custom events from the add_link page
     window.addEventListener('linksUpdated', function () {
       loadUserLinks();
     });
