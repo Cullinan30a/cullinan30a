@@ -1,47 +1,255 @@
 <!doctype html>
 <html lang="zh-HK">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Speech Sandbox v6.7 · 兩版本自述稿 · 一鍵語音播放</title>
-  <meta name="description" content="兩段內容即貼即播，支援粵語（zh-HK）語音合成、情緒預設、語速音高調整。">
+  <title>Voice Content Speaker v6.8 · 動態語音內容播放器 + 資料面板</title>
+  <meta name="description"
+    content="兩段內容即貼即播，支援粵語（zh-HK）語音合成、情緒預設、語速音高調整；新增 Apps Script/Sheets 資料面板，支援 JSONP 讀寫 Voice Content。">
   <style>
-    :root { --bg:#0b0f14; --card:#121821; --ink:#eef3ff; --muted:#a7b0c2; --primary:#5cc8ff; --accent:#ffd166; }
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,PingFang HK,PingFang TC,Helvetica,Arial}
-    .wrap{max-width:980px;margin:40px auto;padding:0 16px}
-    h1{font-size:1.6rem;margin:0 0 12px}
-    .sub{color:var(--muted);margin-bottom:24px}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
-    .panel{background:var(--card);border:1px solid #1e2633;border-radius:16px;padding:16px}
-    textarea{width:100%;min-height:160px;border-radius:12px;border:1px solid #253045;background:#0e141c;color:var(--ink);padding:12px;line-height:1.6}
-    label{display:block;margin-bottom:8px;color:var(--muted)}
-    .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px}
-    button{appearance:none;border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;color:#071018;background:var(--primary)}
-    button.secondary{background:#263447;color:var(--ink)}
-    button.warn{background:var(--accent)}
-    select,input[type="range"]{background:#0e141c;color:var(--ink);border:1px solid #253045;border-radius:10px;padding:8px}
-    .card{background:linear-gradient(180deg,#141c28,#0f1520);border:1px solid #1f2a3a;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
-    .card h3{margin:0 0 4px}
-    .scr{white-space:pre-wrap;line-height:1.7;color:#dfe7ff;background:#0b111a;border-radius:12px;padding:12px;border:1px solid #1d2736;max-height:300px;overflow:auto}
-    .tag{font-size:.8rem;color:#9fb2cc;border:1px solid #2a3a52;border-radius:999px;padding:4px 10px;display:inline-block}
-    .pill{display:inline-flex;gap:8px;align-items:center}
-    .muted{color:var(--muted)}
-    .banner{position:sticky;top:0;z-index:9999;background:#0b0f14;border-bottom:1px solid #1e2633;padding:8px 12px;display:flex;gap:8px;align-items:center}
-    .banner a{color:#5cc8ff;text-decoration:none;font-weight:700}
+    :root {
+      --bg: #0b0f14;
+      --card: #121821;
+      --ink: #eef3ff;
+      --muted: #a7b0c2;
+      --primary: #5cc8ff;
+      --accent: #ffd166;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, PingFang HK, PingFang TC, Helvetica, Arial
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 16px
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 12px
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-bottom: 24px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px
+    }
+
+    @media(min-width:860px) {
+      .grid {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid #1e2633;
+      border-radius: 16px;
+      padding: 16px
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      border-radius: 12px;
+      border: 1px solid #253045;
+      background: #0e141c;
+      color: var(--ink);
+      padding: 12px;
+      line-height: 1.6
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted)
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #071018;
+      background: var(--primary)
+    }
+
+    button.secondary {
+      background: #263447;
+      color: var(--ink)
+    }
+
+    button.warn {
+      background: var(--accent)
+    }
+
+    button.success {
+      background: var(--success)
+    }
+
+    select,
+    input[type="range"],
+    input[type="text"] {
+      background: #0e141c;
+      color: var(--ink);
+      border: 1px solid #253045;
+      border-radius: 10px;
+      padding: 8px
+    }
+
+    .card {
+      background: linear-gradient(180deg, #141c28, #0f1520);
+      border: 1px solid #1f2a3a;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .card h3 {
+      margin: 0 0 4px
+    }
+
+    .scr {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      color: #dfe7ff;
+      background: #0b111a;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #1d2736;
+      max-height: 300px;
+      overflow: auto
+    }
+
+    .tag {
+      font-size: .8rem;
+      color: #9fb2cc;
+      border: 1px solid #2a3a52;
+      border-radius: 999px;
+      padding: 4px 10px;
+      display: inline-block
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .banner {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: #0b0f14;
+      border-bottom: 1px solid #1e2633;
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .banner a {
+      color: #5cc8ff;
+      text-decoration: none;
+      font-weight: 700
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+    }
+
+    .ok {
+      color: #57d69a;
+      font-weight: 700
+    }
+
+    .err {
+      color: #ff7a7a;
+      font-weight: 700
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px
+    }
+
+    .value-display {
+      color: var(--primary);
+      font-weight: 600;
+      min-width: 40px;
+      text-align: center
+    }
+
+    .status {
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      text-align: center;
+      font-size: 0.9rem
+    }
+
+    .status.loading {
+      background: #1e293b;
+      color: #64748b
+    }
+
+    .status.success {
+      background: #0f2419;
+      color: #10b981
+    }
+
+    .status.error {
+      background: #2d1b1b;
+      color: #ef4444
+    }
   </style>
 </head>
+
 <body>
-  <!-- version: v6.7 (2025-08-14) -->
+  <!-- version: v6.8 (2025-08-15) 整合 ChatGPT 資料面板 + 男聲優先 -->
   <div class="banner">
     <a href="index.html">← 返回首頁</a>
-    <span>Speech Sandbox v6.7 · 粵語語音合成</span>
+    <span>Voice Content Speaker v6.8 · 粵語語音合成 + 資料面板</span>
   </div>
 
   <div class="wrap">
     <h1>🎙 兩版本自述稿 · 一鍵語音播放</h1>
     <div class="sub">貼上內容 ▶ 更新到頁面 ▶ 按播放；可選聲線、語速、音高；支援「專業＋震撼」與「溫暖＋關懷」情緒預設。</div>
 
+    <!-- === A. 原本左右兩個輸入框 === -->
     <div class="panel">
       <div class="grid">
         <div>
@@ -49,37 +257,8 @@
           <textarea id="input1">大家好，
 今日我想同你分享，
 一份真正可以改變生活嘅保障方案。
-
 呢份宏伴護航危疾入息保障，
-唔止係一份保險，
-佢係一份長期承諾，
-畀你同你嘅家人，
-面對人生最艱難嘅時候，
-都可以堅持落去。
-
-當你遇上癌症，
-心臟病，
-中風等重大疾病，
-唔止醫療費用飆升，
-仲有收入中斷嘅壓力。
-
-但係，
-呢份保障提供多次賠償，
-高達名義金額四倍，
-仲可以覆蓋早期危疾，
-補足你保障上嘅缺口。
-
-最重要嘅係，
-一旦確診嚴重危疾，
-保費全免，
-保障繼續有效，
-冇中斷，
-冇後顧之憂。
-
-喺關鍵時刻，
-佢係你最堅固嘅盾牌，
-守護你嘅收入，
-穩定你嘅未來。</textarea>
+唔止係一份保險。</textarea>
         </div>
         <div>
           <label for="input2">Option 2（溫暖＋關懷）</label>
@@ -87,57 +266,29 @@
 今日想同大家傾一傾，
 點樣為自己同家人，
 加多一份安全感。
-
-我哋永遠唔知，
-明天會發生咩事，
-可能係一次醫生嘅診斷，
-就令到生活同收入，
-發生翻天覆地嘅變化。
-
-宏伴護航危疾入息保障，
-就係希望喺呢啲時候，
-成為你背後嘅支撐。
-
-佢唔單止會喺你患上嚴重疾病時，
-提供一次賠償，
-仲可以多次索償，
-涵蓋癌症，
-心臟病，
-中風等多種高風險疾病。
-
-如果你需要長時間康復，
-保費仲會自動豁免，
-保障繼續生效，
-唔使擔心中途停止。
-
-因為我知道，
-當你專心養好身體嘅時候，
-冇咗經濟壓力，
-先可以真正安心。
-
-呢份保障，
-唔只係保單上嘅條款，
-佢係一份真心守護，
-令你同家人，
-繼續向前。</textarea>
+我哋永遠唔知明天會發生咩事。</textarea>
         </div>
       </div>
 
       <div class="row" style="margin-top:18px">
         <div class="pill"><span class="muted">🎚 聲線</span>
-          <select id="voiceSelect"><option>載入中…</option></select>
+          <select id="voiceSelect">
+            <option>載入中…</option>
+          </select>
         </div>
         <div class="pill"><span class="muted">⏱ 語速</span>
-          <input id="rate" type="range" min="0.6" max="1.6" step="0.05" value="1.05"/>
+          <input id="rate" type="range" min="0.6" max="1.6" step="0.05" value="1.05" />
+          <span id="rateValue" class="value-display">1.05</span>
         </div>
         <div class="pill"><span class="muted">🎵 音高</span>
-          <input id="pitch" type="range" min="0.7" max="1.6" step="0.05" value="1.05"/>
+          <input id="pitch" type="range" min="0.7" max="1.6" step="0.05" value="1.05" />
+          <span id="pitchValue" class="value-display">1.05</span>
         </div>
         <button id="apply" class="warn">更新到頁面</button>
         <button id="stopAll" class="secondary">■ 全部停止</button>
       </div>
       <div class="row">
-        <span class="tag">優先使用 zh‑HK 聲線</span>
+        <span class="tag">優先使用 zh‑HK 男聲 👨</span>
         <span class="tag">自動分句：逗號/句號/換行</span>
         <span class="tag">行動觸發才能發聲（瀏覽器限制）</span>
       </div>
@@ -149,7 +300,7 @@
         <div class="row">
           <button id="play1">▶ 播放</button>
           <button id="preset1" class="secondary">⚡ 情緒預設：專業＋震撼</button>
-          <button id="copy1" class="secondary">⧉ 複製全文</button>
+          <button id="copy1" class="secondary">📋 複製全文</button>
         </div>
         <div id="out1" class="scr"></div>
       </div>
@@ -157,23 +308,50 @@
         <h3>Option 2（溫暖＋關懷）</h3>
         <div class="row">
           <button id="play2">▶ 播放</button>
-          <button id="preset2" class="secondary">💛 情緒預設：溫暖＋關懷</button>
-          <button id="copy2" class="secondary">⧉ 複製全文</button>
+          <button id="preset2" class="secondary">💝 情緒預設：溫暖＋關懷</button>
+          <button id="copy2" class="secondary">📋 複製全文</button>
         </div>
         <div id="out2" class="scr"></div>
       </div>
     </div>
+
+    <!-- === B. 新增：資料整合面板（Apps Script / Sheets） === -->
+    <div class="panel" style="margin-top:24px">
+      <h3>📦 資料整合面板（Apps Script / Sheets）</h3>
+      <p class="muted">以 JSONP 讀寫 Voice Content：從後端「載入 → 填入兩版本」或「將當前兩版本儲存回後端」。<br>＊後端預設支援 <span
+          class="mono">getvoicecontent</span>、<span class="mono">savevoicecontent</span>、<span
+          class="mono">listversionhistory</span>。額外參數（type/topic）可向後兼容，未實作會自動忽略。</p>
+
+      <div id="loadStatus" class="status loading" style="display:none;">載入中...</div>
+
+      <div class="kv">
+        <div class="muted">Web App URL</div>
+        <input id="webapp"
+          value="https://script.google.com/macros/s/AKfycbyg-yygd55lFzBBkm1LbDqJritK9gFsG6_nydVezXQXYmBkMDQ26awpBdMBYkizIx-g/exec" />
+        <div class="muted">Passcode</div>
+        <input id="passcode" value="" placeholder="請輸入你的 WEBHOOK_PASSCODE" />
+        <div class="muted">Type</div>
+        <input id="vcType" placeholder="例如：insurance / health" />
+        <div class="muted">Topic</div>
+        <input id="vcTopic" placeholder="例如：危疾入息保障、健康保障（預防+收入）" />
+      </div>
+      <div class="row">
+        <button id="btnLoad" class="success">⬇ 載入（getvoicecontent → 填入左右欄）</button>
+        <button id="btnSave" class="warn">⬆ 儲存（當前左右欄 → savevoicecontent）</button>
+        <button id="btnHistory" class="secondary">🕘 版本歷史</button>
+        <button id="btnAutoLoad" class="secondary">🔄 自動載入</button>
+      </div>
+      <div id="log" class="scr" style="margin-top:12px;min-height:120px"></div>
+    </div>
   </div>
 
   <script>
+    // ====== 原有語音功能 + 男聲優先 ======
     const $ = s => document.querySelector(s);
     const voicesState = { voices: [] };
 
     function splitIntoChunks(text) {
-      return text
-        .split(/(?<=[，、。！？\n])/)
-        .map(s => s.trim())
-        .filter(Boolean);
+      return text.split(/(?<=[，、。！？\n])/).map(s => s.trim()).filter(Boolean);
     }
 
     function populateVoices() {
@@ -181,18 +359,43 @@
       const all = speechSynthesis.getVoices();
       voicesState.voices = all;
 
-      const preferred = all.filter(v =>
+      // 優先選擇男性粵語聲線
+      const preferredMale = all.filter(v =>
+        /zh/i.test(v.lang) &&
+        /(HK|Hant)/i.test(v.lang) &&
+        /(male|man|男)/i.test(v.name)
+      );
+
+      // 其他粵語聲線
+      const otherCantonese = all.filter(v =>
         /zh/i.test(v.lang) && /(HK|Hant)/i.test(v.lang) || /yue|canton/i.test(v.name)
       );
 
-      const list = preferred.length ? preferred : all;
+      // 其他中文男聲
+      const otherChineseMale = all.filter(v =>
+        /zh/i.test(v.lang) &&
+        /(male|man|男)/i.test(v.name)
+      );
+
+      // 選擇優先順序：粵語男聲 > 其他粵語 > 中文男聲 > 全部
+      const list = preferredMale.length ? preferredMale :
+        otherCantonese.length ? otherCantonese :
+          otherChineseMale.length ? otherChineseMale : all;
+
       select.innerHTML = '';
       list.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v.name;
-        opt.textContent = `${v.name}  ·  ${v.lang}`;
+        const genderTag = /(male|man|男)/i.test(v.name) ? ' 👨' :
+          /(female|woman|女)/i.test(v.name) ? ' 👩' : '';
+        opt.textContent = `${v.name}${genderTag}  ·  ${v.lang}`;
         select.appendChild(opt);
       });
+
+      // 自動選擇第一個男聲
+      if (preferredMale.length > 0) {
+        select.value = preferredMale[0].name;
+      }
     }
 
     function pickVoiceByName(name) {
@@ -203,11 +406,10 @@
       speechSynthesis.cancel();
     }
 
-    function speakText(text, { rate=1.05, pitch=1.05, voice=null } = {}) {
+    function speakText(text, { rate = 1.05, pitch = 1.05, voice = null } = {}) {
       stopAll();
       const chunks = splitIntoChunks(text);
       let i = 0;
-
       function speakNext() {
         if (i >= chunks.length) return;
         const u = new SpeechSynthesisUtterance(chunks[i]);
@@ -226,26 +428,44 @@
       $('#out2').textContent = $('#input2').value.trim();
     }
 
-    function copyText(elId) {
-      const text = $(elId).textContent;
-      navigator.clipboard.writeText(text);
+    function copyText(el) {
+      const text = document.querySelector(el).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = el === '#out1' ? $('#copy1') : $('#copy2');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ 已複製';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    function updateSliderValues() {
+      $('#rateValue').textContent = $('#rate').value;
+      $('#pitchValue').textContent = $('#pitch').value;
     }
 
     function presetProfessional() {
       $('#rate').value = 1.15;
       $('#pitch').value = 1.0;
+      updateSliderValues();
     }
+
     function presetWarm() {
       $('#rate').value = 0.92;
       $('#pitch').value = 1.18;
+      updateSliderValues();
     }
 
+    // 事件監聽器
     $('#apply').addEventListener('click', applyToPage);
     $('#stopAll').addEventListener('click', stopAll);
     $('#copy1').addEventListener('click', () => copyText('#out1'));
     $('#copy2').addEventListener('click', () => copyText('#out2'));
     $('#preset1').addEventListener('click', presetProfessional);
     $('#preset2').addEventListener('click', presetWarm);
+    $('#rate').addEventListener('input', updateSliderValues);
+    $('#pitch').addEventListener('input', updateSliderValues);
 
     $('#play1').addEventListener('click', () => {
       const voice = pickVoiceByName($('#voiceSelect').value);
@@ -271,7 +491,181 @@
     } else {
       $('#voiceSelect').innerHTML = '<option>此瀏覽器不支援語音合成</option>';
     }
+
+    // ====== 新增：JSONP + Sheets 面板功能 ======
+    function showStatus(message, type = 'loading') {
+      const status = $('#loadStatus');
+      status.textContent = message;
+      status.className = `status ${type}`;
+      status.style.display = 'block';
+
+      if (type !== 'loading') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    function log(msg, cls) {
+      const box = $('#log');
+      const line = document.createElement('div');
+      if (cls) line.className = cls;
+      line.textContent = `[${new Date().toLocaleString()}] ${msg}`;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function logJSON(obj) {
+      const box = $('#log');
+      const pre = document.createElement('pre');
+      pre.style.fontSize = '0.85rem';
+      pre.style.color = '#a7b0c2';
+      pre.textContent = JSON.stringify(obj, null, 2);
+      box.appendChild(pre);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const cb = 'cb_' + Math.random().toString(36).slice(2);
+        const s = document.createElement('script');
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('JSONP timeout'));
+        }, 15000);
+        window[cb] = (data) => {
+          clearTimeout(timeout);
+          cleanup();
+          resolve(data);
+        };
+        function cleanup() {
+          delete window[cb];
+          s.remove();
+        }
+        const sep = url.includes('?') ? '&' : '?';
+        s.src = url + sep + 'callback=' + cb;
+        s.onerror = () => {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('JSONP error'));
+        };
+        document.body.appendChild(s);
+      });
+    }
+
+    function cfg() {
+      const base = $('#webapp').value.trim();
+      const pass = $('#passcode').value.trim();
+      if (!base || !pass) {
+        throw new Error('請先填 Web App URL / Passcode');
+      }
+      return { base, pass };
+    }
+
+    async function loadVoice() {
+      try {
+        const { base, pass } = cfg();
+        const url = `${base}?action=getvoicecontent&passcode=${encodeURIComponent(pass)}`;
+        showStatus('載入 voice content...', 'loading');
+        log('載入 voice content…');
+        const data = await jsonp(url);
+        log('已取得 voice content', 'ok');
+        logJSON(data);
+
+        const p = data?.data?.professional || data?.professional || '';
+        const w = data?.data?.warm || data?.warm || '';
+        const type = data?.data?.type || data?.type || '';
+        const topic = data?.data?.topic || data?.topic || '';
+
+        if (type) $('#vcType').value = type;
+        if (topic) $('#vcTopic').value = topic;
+        if (p) $('#input1').value = p;
+        if (w) $('#input2').value = w;
+
+        applyToPage();
+        showStatus('✅ 內容載入成功！', 'success');
+      }
+      catch (e) {
+        log('載入失敗：' + e.message, 'err');
+        showStatus('❌ 載入失敗: ' + e.message, 'error');
+      }
+    }
+
+    async function saveVoice() {
+      try {
+        const { base, pass } = cfg();
+        const professional = $('#input1').value.trim();
+        const warm = $('#input2').value.trim();
+        const type = $('#vcType').value.trim();
+        const topic = $('#vcTopic').value.trim();
+
+        if (!professional && !warm) {
+          throw new Error('兩個欄位都係空白');
+        }
+
+        const url = `${base}?action=savevoicecontent&professional=${encodeURIComponent(professional)}&warm=${encodeURIComponent(warm)}&type=${encodeURIComponent(type)}&topic=${encodeURIComponent(topic)}&passcode=${encodeURIComponent(pass)}`;
+        showStatus('儲存 voice content...', 'loading');
+        log('儲存 voice content…');
+        const data = await jsonp(url);
+        log('已儲存（savevoicecontent）', 'ok');
+        logJSON(data);
+        showStatus('✅ 儲存成功！', 'success');
+      } catch (e) {
+        log('儲存失敗：' + e.message, 'err');
+        showStatus('❌ 儲存失敗: ' + e.message, 'error');
+      }
+    }
+
+    async function history() {
+      try {
+        const { base, pass } = cfg();
+        const url = `${base}?action=listversionhistory&limit=10&passcode=${encodeURIComponent(pass)}`;
+        showStatus('讀取版本歷史...', 'loading');
+        log('讀取版本歷史…');
+        const data = await jsonp(url);
+        log('已取得版本歷史', 'ok');
+        logJSON(data);
+        showStatus('✅ 版本歷史載入完成！', 'success');
+      }
+      catch (e) {
+        log('讀取版本歷史失敗：' + e.message, 'err');
+        showStatus('❌ 讀取失敗: ' + e.message, 'error');
+      }
+    }
+
+    async function autoLoad() {
+      if (!$('#passcode').value.trim()) {
+        log('自動載入跳過：未設定 Passcode', 'err');
+        return;
+      }
+
+      try {
+        await loadVoice();
+        log('自動載入完成', 'ok');
+      } catch (e) {
+        log('自動載入失敗：' + e.message, 'err');
+      }
+    }
+
+    // 資料面板事件監聽器
+    $('#btnLoad').addEventListener('click', loadVoice);
+    $('#btnSave').addEventListener('click', saveVoice);
+    $('#btnHistory').addEventListener('click', history);
+    $('#btnAutoLoad').addEventListener('click', autoLoad);
+
+    // 初始化
+    updateSliderValues();
     applyToPage();
+
+    // 頁面載入時嘗試自動載入（如果有設定 passcode）
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if ($('#passcode').value.trim()) {
+          autoLoad();
+        }
+      }, 1000);
+    });
   </script>
 </body>
+
 </html>
