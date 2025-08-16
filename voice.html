@@ -36,6 +36,24 @@
             background: #1d4ed8;
         }
 
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f38ba8;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+        }
+
         .status-bar {
             text-align: center;
             background: #313244;
@@ -272,7 +290,44 @@
 </head>
 
 <body>
+    <script>
+        // Auth protection - MUST BE FIRST SCRIPT
+        (function () {
+            const isAuthenticated = sessionStorage.getItem('cullinan30a_session') === 'true';
+            const authToken = localStorage.getItem('cullinan30a_auth');
+
+            if (!isAuthenticated || !authToken) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Check token expiry
+            try {
+                const decoded = atob(authToken).split('_');
+                const timestamp = parseInt(decoded[1], 10);
+                const expiry = 24 * 60 * 60 * 1000; // 24 hours
+
+                if (Date.now() - timestamp > expiry) {
+                    localStorage.removeItem('cullinan30a_auth');
+                    sessionStorage.removeItem('cullinan30a_session');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+            } catch (e) {
+                window.location.href = 'auth.html';
+                return;
+            }
+        })();
+
+        function logout() {
+            localStorage.removeItem('cullinan30a_auth');
+            sessionStorage.removeItem('cullinan30a_session');
+            window.location.href = 'auth.html';
+        }
+    </script>
+
     <a href="index.html" class="back-button">← 返回首頁</a>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
 
     <div class="container">
         <div class="status-bar">v6.8 | Updated: 2025-08-15 16:00 (GMT+8) | Voice Content Speaker v6.8 with Apps Script
