@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FacePack.ID Dashboard | 面部識別數據面板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f38ba8;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 50;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        .back-button:hover {
+            background: #1d4ed8;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-ok {
+            background-color: #10b981;
+        }
+
+        .status-error {
+            background-color: #ef4444;
+        }
+
+        .endpoint-card {
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .endpoint-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .copy-success {
+            background-color: #10b981 !important;
+            color: white !important;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
+    <script>
+        // Auth protection - MUST BE FIRST SCRIPT
+        (function () {
+            const isAuthenticated = sessionStorage.getItem('cullinan30a_session') === 'true';
+            const authToken = localStorage.getItem('cullinan30a_auth');
+
+            if (!isAuthenticated || !authToken) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Check token expiry
+            try {
+                const decoded = atob(authToken).split('_');
+                const timestamp = parseInt(decoded[1], 10);
+                const expiry = 24 * 60 * 60 * 1000; // 24 hours
+
+                if (Date.now() - timestamp > expiry) {
+                    localStorage.removeItem('cullinan30a_auth');
+                    sessionStorage.removeItem('cullinan30a_session');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+            } catch (e) {
+                window.location.href = 'auth.html';
+                return;
+            }
+        })();
+
+        function logout() {
+            localStorage.removeItem('cullinan30a_auth');
+            sessionStorage.removeItem('cullinan30a_session');
+            window.location.href = 'auth.html';
+        }
+    </script>
+
+    <a href="index.html" class="back-button">← 返回首頁</a>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-10 backdrop-blur bg-white/70 border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold">FP</div>
+            <div>
+                <h1 class="text-xl font-semibold">FacePack.ID Web App v2.1 — Dashboard</h1>
+                <p class="text-sm text-slate-500">Manage records • Export/Backup • Search • Webhooks</p>
+            </div>
+            <div class="ml-auto">
+                <span id="connectionStatus" class="text-sm flex items-center">
+                    <span class="status-indicator status-error"></span>
+                    Ready to connect...
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-10">
+        <!-- Setup -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4">🔧 1) Setup</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Base URL (Web App /exec)</label>
+                    <input id="baseUrl" type="url"
+                        class="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                        placeholder="https://script.google.com/macros/s/AKfy.../exec"
+                        value="https://script.google.com/macros/s/AKfycbzkjJlHBJMa-iC21Aj1mhod_E9dP_bp5gH9JrikpuTOwFOdC1C07VF_vGv3gl-AMwpOuQ/exec">
+                    <p class="text-xs text-slate-500 mt-1">Example: your deployed Apps Script web app endpoint.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Passcode</label>
+                    <input id="passcode" type="password"
+                        class="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                        placeholder="enter passcode (we will URL-encode it)" value="chatgpthduson1234$">
+                    <p class="text-xs text-slate-500 mt-1">Tip: if it contains <code>$</code>, it will be encoded
+                        automatically.</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">(Optional) Facepack Folder ID</label>
+                    <input id="folderId" class="w-full border rounded-xl px-3 py-2" placeholder="Drive folderId"
+                        value="1hNf41iyyozx8DJC0aAj8wjDX6xMT8LPy">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">(Optional) Facesheet ID</label>
+                    <input id="sheetId" class="w-full border rounded-xl px-3 py-2" placeholder="Spreadsheet ID">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Sheet Name</label>
+                    <input id="sheetName" class="w-full border rounded-xl px-3 py-2" value="Facesheet">
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Demo Person ID</label>
+                    <input id="demoPersonId" class="w-full border rounded-xl px-3 py-2" value="demo001"
+                        placeholder="demo001">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button onclick="testConnection()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        🔍 Test Connection
+                    </button>
+                    <button onclick="resetToDefaults()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 rounded-xl bg-slate-50 text-sm text-slate-600">
+                This dashboard does not transmit data anywhere by itself. Buttons only open your API links in a new tab.
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">⚡ 2) Quick Actions</h2>
+            <p class="text-sm text-slate-600 mb-4">Click any endpoint to open it with demo-safe payloads.</p>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="endpointsGrid">
+                <!-- Endpoints will be generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Live Testing -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">🧪 3) Live Testing</h2>
+            <p class="text-sm text-slate-600 mb-4">Test endpoints directly in the browser with custom payloads.</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Action</label>
+                    <select id="testAction" class="w-full border rounded-lg px-3 py-2 text-sm">
+                        <option value="ping">ping - Health check</option>
+                        <option value="help">help - List endpoints</option>
+                        <option value="append">append - Add single record</option>
+                        <option value="batchinsert">batchinsert - Add multiple records</option>
+                        <option value="search">search - Find records</option>
+                        <option value="exportsheet">exportsheet - Export to JSON</option>
+                        <option value="backup">backup - Create backup</option>
+                        <option value="savefile">savefile - Save file to Drive</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Method</label>
+                    <select id="testMethod" class="w-full border rounded-lg px-3 py-2 text-sm">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Payload (JSON)</label>
+                    <textarea id="testPayload" rows="6" class="w-full border rounded-lg px-3 py-2 text-sm font-mono"
+                        placeholder="Enter JSON payload here..."></textarea>
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <button onclick="runTest()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        🚀 Run Test
+                    </button>
+                    <button onclick="clearTestResults()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        🗑️ Clear Results
+                    </button>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Response</label>
+                    <div id="testResults"
+                        class="border rounded-lg p-3 bg-gray-50 text-sm font-mono min-h-[100px] overflow-auto">
+                        Click "Run Test" to see results here...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Schema & Types -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">📊 4) Data Schema</h2>
+            <p class="text-sm text-slate-600 mb-4">Sheet headers + score fields. Unknown fields go into
+                <code>extra_json</code>. Score values are normalized 0–100.</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium mb-2">Headers</h3>
+                    <ul class="text-sm grid grid-cols-2 gap-2" id="headersList">
+                        <!-- Headers will be generated by JavaScript -->
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Score Fields (0–100)</h3>
+                    <ul class="text-sm grid grid-cols-2 gap-2" id="scoresList">
+                        <!-- Scores will be generated by JavaScript -->
+                    </ul>
+                    <div class="mt-3 text-xs text-slate-500">Required fields: <code>person_id</code>,
+                        <code>person_name</code>.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">🔄 5) Workflow</h2>
+            <div class="grid md:grid-cols-4 gap-3 text-sm">
+                <div class="p-4 rounded-2xl border bg-slate-50">
+                    <div class="text-sm font-medium">Collect</div>
+                    <div class="text-xs text-slate-600 mt-1">Images + attributes → JSON (no personal data in demos)
+                    </div>
+                </div>
+                <div class="grid place-items-center text-2xl">→</div>
+                <div class="p-4 rounded-2xl border bg-slate-50">
+                    <div class="text-sm font-medium">Submit</div>
+                    <div class="text-xs text-slate-600 mt-1">append / batchinsert → Facesheet</div>
+                </div>
+                <div class="grid place-items-center text-2xl">→</div>
+                <div class="p-4 rounded-2xl border bg-slate-50">
+                    <div class="text-sm font-medium">Manage</div>
+                    <div class="text-xs text-slate-600 mt-1">search / config / backup → Drive</div>
+                </div>
+                <div class="grid place-items-center text-2xl">→</div>
+                <div class="p-4 rounded-2xl border bg-slate-50">
+                    <div class="text-sm font-medium">Export</div>
+                    <div class="text-xs text-slate-600 mt-1">exportsheet → versioned JSON snapshot</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Example JSON -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">📄 6) Example Payload (Demo-Safe)</h2>
+            <pre id="examplePayload"
+                class="bg-slate-900 text-slate-100 rounded-xl p-4 text-xs overflow-auto"><code></code></pre>
+            <p class="text-xs text-slate-500 mt-2">Use this with <code>append</code> (single) or place an array of such
+                objects with <code>batchinsert</code>.</p>
+        </section>
+
+        <!-- Illustrative Photo -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">🖼️ 7) Illustrative Photo</h2>
+            <p class="text-sm text-slate-600 mb-3">A neutral placeholder image to illustrate UI usage. Replace with your
+                own non-sensitive example if desired.</p>
+            <img src="https://placehold.co/1200x500/1e293b/f1f5f9?text=FacePack+Dashboard+Illustration"
+                alt="Illustrative placeholder" class="w-full rounded-2xl border shadow-sm">
+        </section>
+
+        <!-- cURL Templates -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">💻 8) cURL Templates</h2>
+            <p class="text-sm text-slate-600 mb-3">Replace <code>{BASE_URL}</code> and <code>{PASSCODE}</code>.
+                Content-Type: application/json.</p>
+
+            <div id="curlTemplates">
+                <!-- cURL templates will be generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-2">📋 9) Activity Log</h2>
+            <p class="text-sm text-slate-600 mb-3">Recent API calls and responses.</p>
+
+            <div class="flex gap-2 mb-4">
+                <button onclick="clearLog()" class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700">
+                    Clear Log
+                </button>
+                <button onclick="exportLog()"
+                    class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Export Log
+                </button>
+            </div>
+
+            <div id="activityLog" class="border rounded-lg p-3 bg-gray-50 text-sm font-mono h-64 overflow-auto">
+                Activity log will appear here...
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-xs text-slate-500 py-6">
+            <p>Privacy-first demo: this dashboard ships only with placeholder data. Always avoid real personal data in
+                tests.</p>
+            <p class="mt-2">FacePack.ID Dashboard v2.1 | Enhanced with auth protection and live testing capabilities</p>
+        </footer>
+    </main>
+
+    <script>
+        // Configuration and state
+        let config = {
+            baseUrl: '',
+            passcode: '',
+            folderId: '',
+            sheetId: '',
+            sheetName: 'Facesheet',
+            demoPersonId: 'demo001'
+        };
+
+        // Data definitions
+        const headers = [
+            'ts', 'person_id', 'person_name', 'profile', 'height_cm', 'weight_kg', 'eye_shape', 'eye_lid',
+            'eye_angle_deg', 'brow_shape', 'nose_bridge', 'nose_tip', 'lips', 'face_shape', 'jawline',
+            'skin_tone', 'moles', 'freckles', 'hair_color', 'hair_style', 'facial_hair', 'ear_shape',
+            'glasses', 'expression', 'lighting', 'camera_angle', 'image_url', 'source', 'notes', 'scores_json', 'extra_json'
+        ];
+
+        const scoreFields = [
+            'eye_intensity', 'brow_prominence', 'nose_definition', 'lip_fullness',
+            'jaw_sharpness', 'skin_clarity', 'smile_degree'
+        ];
+
+        const endpoints = [
+            { name: 'Ping', action: 'ping', desc: 'Health check (pong)', method: 'GET' },
+            { name: 'Help', action: 'help', desc: 'List available endpoints', method: 'GET' },
+            { name: 'Config View', action: 'config', desc: 'View configuration', method: 'GET', params: { view: '1' } },
+            { name: 'Append', action: 'append', desc: 'Insert one demo record', method: 'GET' },
+            { name: 'Batch Insert', action: 'batchinsert', desc: 'Insert multiple records', method: 'GET' },
+            { name: 'Search', action: 'search', desc: 'Find records by filters', method: 'GET' },
+            { name: 'Export Sheet', action: 'exportsheet', desc: 'Export to JSON file', method: 'GET' },
+            { name: 'Backup', action: 'backup', desc: 'Create backup in Drive', method: 'GET' },
+            { name: 'Savefile', action: 'savefile', desc: 'Save demo JSON to Drive', method: 'GET' }
+        ];
+
+        // Demo data
+        function getDemoRow() {
+            return {
+                person_id: config.demoPersonId,
+                person_name: "Alice Demo",
+                profile: "sample",
+                height_cm: 170,
+                weight_kg: 65,
+                eye_shape: "round",
+                hair_color: "brown",
+                scores: {
+                    eye_intensity: 55,
+                    brow_prominence: 60,
+                    nose_definition: 50,
+                    lip_fullness: 45,
+                    jaw_sharpness: 52,
+                    skin_clarity: 70,
+                    smile_degree: 48,
+                },
+                source: "dashboard-demo",
+            };
+        }
+
+        function getDemoRows() {
+            return [
+                getDemoRow(),
+                {
+                    person_id: "demo002",
+                    person_name: "Bob Sample",
+                    eye_shape: "almond",
+                    hair_color: "black",
+                    scores: { eye_intensity: 62, smile_degree: 57 },
+                    source: "dashboard-demo",
+                }
+            ];
+        }
+
+        // Utility functions
+        function encode(v) {
+            return encodeURIComponent(v ?? "");
+        }
+
+        function makeUrl(action, params = {}) {
+            const url = new URL(config.baseUrl);
+            url.searchParams.set('action', action);
+            if (config.passcode) {
+                url.searchParams.set('passcode', config.passcode);
+            }
+            Object.entries(params).forEach(([key, value]) => {
+                url.searchParams.set(key, value);
+            });
+            return url.toString();
+        }
+
+        function updateConfig() {
+            config.baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+            config.passcode = document.getElementById('passcode').value;
+            config.folderId = document.getElementById('folderId').value;
+            config.sheetId = document.getElementById('sheetId').value;
+            config.sheetName = document.getElementById('sheetName').value;
+            config.demoPersonId = document.getElementById('demoPersonId').value;
+
+            // Update example payload
+            updateExamplePayload();
+
+            // Regenerate endpoints
+            generateEndpoints();
+            generateCurlTemplates();
+        }
+
+        function resetToDefaults() {
+            document.getElementById('baseUrl').value = 'https://script.google.com/macros/s/AKfycbzkjJlHBJMa-iC21Aj1mhod_E9dP_bp5gH9JrikpuTOwFOdC1C07VF_vGv3gl-AMwpOuQ/exec';
+            document.getElementById('passcode').value = 'chatgpthduson1234$';
+            document.getElementById('folderId').value = '1hNf41iyyozx8DJC0aAj8wjDX6xMT8LPy';
+            document.getElementById('sheetId').value = '';
+            document.getElementById('sheetName').value = 'Facesheet';
+            document.getElementById('demoPersonId').value = 'demo001';
+            updateConfig();
+        }
+
+        async function testConnection() {
+            updateConfig();
+
+            if (!config.baseUrl) {
+                alert('Please enter a valid Base URL first.');
+                return;
+            }
+
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.innerHTML = '<span class="status-indicator status-error"></span>Testing...';
+
+            try {
+                const url = makeUrl('ping');
+                const response = await fetch(url);
+                const data = await response.text();
+
+                if (data.includes('pong') || response.ok) {
+                    statusEl.innerHTML = '<span class="status-indicator status-ok"></span>Connected';
+                    logActivity('Connection test', 'SUCCESS', { url, response: data });
+                } else {
+                    throw new Error('Invalid response');
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status-indicator status-error"></span>Connection failed';
+                logActivity('Connection test', 'ERROR', { error: error.message });
+            }
+        }
+
+        async function copyToClipboard(text, buttonEl) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = buttonEl.textContent;
+                buttonEl.textContent = '✅ Copied';
+                buttonEl.classList.add('copy-success');
+
+                setTimeout(() => {
+                    buttonEl.textContent = originalText;
+                    buttonEl.classList.remove('copy-success');
+                }, 2000);
+            } catch (error) {
+                console.error('Copy failed:', error);
+            }
+        }
+
+        function openUrl(url) {
+            if (!config.baseUrl) {
+                alert('Please enter a valid Base URL first.');
+                return;
+            }
+            window.open(url, '_blank');
+            logActivity('Open URL', 'INFO', { url });
+        }
+
+        function generateEndpoints() {
+            const grid = document.getElementById('endpointsGrid');
+            grid.innerHTML = '';
+
+            endpoints.forEach(endpoint => {
+                let url = '';
+                let payload = null;
+
+                switch (endpoint.action) {
+                    case 'append':
+                        url = makeUrl('append', { row: encode(JSON.stringify(getDemoRow())) });
+                        break;
+                    case 'batchinsert':
+                        url = makeUrl('batchinsert', { rows: encode(JSON.stringify(getDemoRows())) });
+                        break;
+                    case 'search':
+                        url = makeUrl('search', { person_id: config.demoPersonId });
+                        break;
+                    case 'exportsheet':
+                        url = makeUrl('exportsheet', {
+                            filename: `Facesheet_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.json`,
+                            ...(config.folderId ? { folderId: config.folderId } : {})
+                        });
+                        break;
+                    case 'savefile':
+                        url = makeUrl('savefile', {
+                            filename: 'DemoFacepack.json',
+                            content: encode(JSON.stringify({ demo: true, note: "sample-only-no-personal-data" }))
+                        });
+                        break;
+                    default:
+                        url = makeUrl(endpoint.action, endpoint.params || {});
+                }
+
+                const card = document.createElement('div');
+                card.className = 'endpoint-card border rounded-2xl p-4 shadow-sm';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                            <h3 class="font-medium">${endpoint.name}</h3>
+                            <p class="text-sm text-slate-600">${endpoint.desc}</p>
+                            <span class="text-xs bg-slate-100 px-2 py-1 rounded mt-1 inline-block">${endpoint.method}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="openUrl('${url}')" class="px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-700">
+                            Open
+                        </button>
+                        <button onclick="copyToClipboard('${url}', this)" class="px-3 py-2 rounded-xl border hover:bg-gray-50">
+                            Copy Link
+                        </button>
+                    </div>
+                    <div class="mt-2 text-xs text-slate-500 break-all">${url}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function generateCurlTemplates() {
+            const container = document.getElementById('curlTemplates');
+            const templates = [
+                {
+                    label: 'Append (GET with URL params)',
+                    curl: `curl "${makeUrl('append', { row: encode(JSON.stringify(getDemoRow())) })}"`
+                },
+                {
+                    label: 'Batch Insert (GET with URL params)',
+                    curl: `curl "${makeUrl('batchinsert', { rows: encode(JSON.stringify(getDemoRows())) })}"`
+                },
+                {
+                    label: 'Export Sheet (GET)',
+                    curl: `curl "${makeUrl('exportsheet')}"`
+                },
+                {
+                    label: 'Savefile (GET with URL params)',
+                    curl: `curl "${makeUrl('savefile', { filename: 'DemoFacepack.json', content: encode(JSON.stringify({ demo: true, note: "sample-only-no-personal-data" })) })}"`
+                }
+            ];
+
+            container.innerHTML = templates.map(template => `
+                <div class="mb-3">
+                    <div class="text-xs font-medium mb-1 text-slate-600">${template.label}</div>
+                    <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 text-xs overflow-auto"><code>${template.curl}</code></pre>
+                </div>
+            `).join('');
+        }
+
+        function updateExamplePayload() {
+            const payloadEl = document.getElementById('examplePayload');
+            payloadEl.innerHTML = `<code>${JSON.stringify(getDemoRow(), null, 2)}</code>`;
+        }
+
+        async function runTest() {
+            updateConfig();
+
+            const action = document.getElementById('testAction').value;
+            const method = document.getElementById('testMethod').value;
+            const payload = document.getElementById('testPayload').value;
+            const resultsEl = document.getElementById('testResults');
+
+            resultsEl.textContent = 'Running test...';
+
+            try {
+                let url = makeUrl(action);
+                let options = { method };
+
+                if (method === 'POST' && payload) {
+                    options.headers = { 'Content-Type': 'application/json' };
+                    options.body = payload;
+                }
+
+                const response = await fetch(url);
+                const data = await response.text();
+
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: data
+                };
+
+                resultsEl.textContent = JSON.stringify(result, null, 2);
+                logActivity(`Test ${action}`, response.ok ? 'SUCCESS' : 'ERROR', { url, method, response: result });
+
+            } catch (error) {
+                const errorResult = { error: error.message, timestamp: new Date().toISOString() };
+                resultsEl.textContent = JSON.stringify(errorResult, null, 2);
+                logActivity(`Test ${action}`, 'ERROR', errorResult);
+            }
+        }
+
+        function clearTestResults() {
+            document.getElementById('testResults').textContent = 'Click "Run Test" to see results here...';
+        }
+
+        function logActivity(action, status, details = {}) {
+            const logEl = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleString();
+            const entry = `[${timestamp}] ${status}: ${action}\n${JSON.stringify(details, null, 2)}\n\n`;
+            logEl.textContent += entry;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('activityLog').textContent = 'Activity log cleared...\n';
+        }
+
+        function exportLog() {
+            const log = document.getElementById('activityLog').textContent;
+            const blob = new Blob([log], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `facepack-log-${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize page
+        function init() {
+            // Populate headers and scores
+            const headersList = document.getElementById('headersList');
+            const scoresList = document.getElementById('scoresList');
+
+            headers.forEach(header => {
+                const li = document.createElement('li');
+                li.className = 'px-3 py-1 rounded-lg bg-slate-50 border text-slate-700';
+                li.textContent = header;
+                headersList.appendChild(li);
+            });
+
+            scoreFields.forEach(field => {
+                const li = document.createElement('li');
+                li.className = 'px-3 py-1 rounded-lg bg-slate-50 border text-slate-700';
+                li.textContent = field;
+                scoresList.appendChild(li);
+            });
+
+            // Add event listeners
+            ['baseUrl', 'passcode', 'folderId', 'sheetId', 'sheetName', 'demoPersonId'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateConfig);
+            });
+
+            document.getElementById('testAction').addEventListener('change', function () {
+                const action = this.value;
+                let payload = '';
+
+                switch (action) {
+                    case 'append':
+                        payload = JSON.stringify(getDemoRow(), null, 2);
+                        break;
+                    case 'batchinsert':
+                        payload = JSON.stringify({ rows: getDemoRows() }, null, 2);
+                        break;
+                    case 'savefile':
+                        payload = JSON.stringify({ content: { demo: true, note: "sample-only-no-personal-data" } }, null, 2);
+                        break;
+                    default:
+                        payload = '{}';
+                }
+
+                document.getElementById('testPayload').value = payload;
+            });
+
+            // Initial setup
+            updateConfig();
+
+            // Test connection on load
+            setTimeout(testConnection, 1000);
+        }
+
+        // Start when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

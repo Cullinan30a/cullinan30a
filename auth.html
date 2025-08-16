@@ -1,288 +1,359 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-HK">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access Control | 存取控制</title>
+    <title>Login | 登入驗證</title>
     <style>
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+        * {
             margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #2d3748;
-        }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.96);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            width: 90%;
-            max-width: 420px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 1.75rem;
-            color: #4a5568;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.75rem;
-            color: #4a5568;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        input[type="password"] {
-            width: 100%;
-            padding: 0.875rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        input[type="password"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(to right, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            padding: 20px;
         }
 
-        .btn:hover {
-            background: linear-gradient(to right, #5a67d8, #6b46c1);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.6s ease-out;
         }
 
-        .btn:active {
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .login-form {
+            padding: 30px 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .login-button:active {
             transform: translateY(0);
         }
 
-        .error {
-            color: #e53e3e;
-            margin: 1rem 0;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: 500;
-            padding: 0.5rem;
-            background: rgba(229, 62, 62, 0.1);
-            border-radius: 6px;
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
             display: none;
         }
 
-        .info {
-            color: #718096;
-            font-size: 0.875rem;
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .footer {
             text-align: center;
-            margin-top: 1.5rem;
-            line-height: 1.5;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
         }
 
-        .language-toggle {
+        .password-hints {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .password-hints h4 {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .password-hints ul {
+            list-style: none;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .password-hints li {
+            margin-bottom: 4px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .password-hints li:before {
+            content: "•";
+            color: #9ca3af;
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 1.5rem;
-                width: 85%;
-            }
-
-            .logo {
-                font-size: 1.5rem;
-            }
+            left: 0;
         }
     </style>
 </head>
 
 <body>
     <div class="login-container">
-        <div class="logo">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span>Cullinan30a Access</span>
+        <div class="login-header">
+            <h1>🔐 安全驗證</h1>
+            <p>Cullinan30a 項目存取控制</p>
         </div>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="password">Access Code | 存取密碼</label>
-                <input type="password" id="password" placeholder="Enter access code..." autocomplete="current-password"
-                    autofocus>
+        <div class="login-form">
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">輸入存取密碼</label>
+                    <input type="password" id="password" class="form-input" placeholder="請輸入密碼..." required
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="login-button">
+                    登入存取
+                </button>
+            </form>
+
+            <div class="password-hints">
+                <h4>📝 提示信息</h4>
+                <ul>
+                    <li>使用預設密碼之一進行存取</li>
+                    <li>登入成功後可存取 24 小時</li>
+                    <li>支援多個專案存取密碼</li>
+                    <li>安全連線保護您的資料</li>
+                </ul>
             </div>
 
-            <button type="submit" class="btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                    <polyline points="10 17 15 12 10 7"></polyline>
-                    <line x1="15" y1="12" x2="3" y2="12"></line>
-                </svg>
-                Access Project
-            </button>
-
-            <div id="error" class="error"></div>
-        </form>
-
-        <div class="info">
-            🛡️ This project is password protected<br>
-            Enter the correct access code to continue
+            <div class="footer">
+                Cullinan30a Project v6.8 | 2025-08-16<br>
+                Protected by authentication system
+            </div>
         </div>
     </div>
 
     <script>
-        // Configuration
-        const CONFIG = {
-            passwords: [
-                'cullinan2025',
-                'voice6.8',
-                'apps-script-access'
-            ],
-            authTokenName: 'cullinan30a_auth',
-            sessionTokenName: 'cullinan30a_session',
-            redirectTo: 'index.html',
-            tokenExpiry: 24 * 60 * 60 * 1000 // 24 hours
-        };
+        // Valid passwords
+        const validPasswords = [
+            'cullinan2025',
+            'voice6.8',
+            'apps-script-access',
+            'facepack-dashboard',
+            'auth-protection-2025'
+        ];
 
-        // DOM Elements
         const loginForm = document.getElementById('loginForm');
         const passwordInput = document.getElementById('password');
-        const errorDisplay = document.getElementById('error');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const loginContainer = document.querySelector('.login-container');
 
-        // Check existing authentication
-        function checkAuth() {
-            const sessionAuth = sessionStorage.getItem(CONFIG.sessionTokenName);
-            const persistentAuth = localStorage.getItem(CONFIG.authTokenName);
+        // Check if already authenticated
+        function checkExistingAuth() {
+            const isAuthenticated = sessionStorage.getItem('cullinan30a_session') === 'true';
+            const authToken = localStorage.getItem('cullinan30a_auth');
 
-            if (sessionAuth === 'true') {
-                redirect();
-                return true;
-            }
-
-            if (persistentAuth) {
+            if (isAuthenticated && authToken) {
                 try {
-                    const decoded = atob(persistentAuth).split('_');
-                    const password = decoded[0];
+                    const decoded = atob(authToken).split('_');
                     const timestamp = parseInt(decoded[1], 10);
+                    const expiry = 24 * 60 * 60 * 1000; // 24 hours
 
-                    if (CONFIG.passwords.includes(password) &&
-                        Date.now() - timestamp < CONFIG.tokenExpiry) {
-                        sessionStorage.setItem(CONFIG.sessionTokenName, 'true');
-                        redirect();
-                        return true;
-                    } else {
-                        localStorage.removeItem(CONFIG.authTokenName);
+                    if (Date.now() - timestamp < expiry) {
+                        window.location.href = 'index.html';
+                        return;
                     }
                 } catch (e) {
-                    console.error('Auth token parsing failed:', e);
-                    localStorage.removeItem(CONFIG.authTokenName);
+                    // Invalid token, continue to login
                 }
+            }
+
+            // Clear invalid tokens
+            localStorage.removeItem('cullinan30a_auth');
+            sessionStorage.removeItem('cullinan30a_session');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+
+            loginContainer.classList.add('shake');
+            setTimeout(() => {
+                loginContainer.classList.remove('shake');
+            }, 500);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function generateToken(password) {
+            const timestamp = Date.now();
+            const hash = btoa(`${password}_${timestamp}`);
+            return hash;
+        }
+
+        function authenticate(password) {
+            if (validPasswords.includes(password)) {
+                const token = generateToken(password);
+
+                // Store authentication
+                localStorage.setItem('cullinan30a_auth', token);
+                sessionStorage.setItem('cullinan30a_session', 'true');
+
+                showSuccess('✅ 驗證成功！正在跳轉...');
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+
+                return true;
             }
             return false;
         }
 
-        // Redirect to main page
-        function redirect() {
-            window.location.href = CONFIG.redirectTo;
-        }
-
-        // Handle form submission
-        function handleSubmit(e) {
+        loginForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            errorDisplay.style.display = 'none';
 
             const password = passwordInput.value.trim();
 
-            if (CONFIG.passwords.includes(password)) {
-                // Set authentication tokens
-                const authToken = btoa(`${password}_${Date.now()}`);
-                localStorage.setItem(CONFIG.authTokenName, authToken);
-                sessionStorage.setItem(CONFIG.sessionTokenName, 'true');
+            if (!password) {
+                showError('❌ 請輸入密碼');
+                return;
+            }
 
-                // Redirect
-                redirect();
+            if (authenticate(password)) {
+                // Success handled in authenticate function
             } else {
-                // Show error
-                errorDisplay.textContent = '❌ Invalid access code. Please try again.';
-                errorDisplay.style.display = 'block';
+                showError('❌ 密碼錯誤，請重新輸入');
                 passwordInput.value = '';
                 passwordInput.focus();
-
-                // Shake animation
-                loginForm.classList.add('shake');
-                setTimeout(() => {
-                    loginForm.classList.remove('shake');
-                }, 500);
             }
-        }
+        });
 
-        // Event listeners
-        loginForm.addEventListener('submit', handleSubmit);
-
-        // Initial auth check
-        if (!checkAuth()) {
+        // Focus password input on load
+        window.addEventListener('load', () => {
+            checkExistingAuth();
             passwordInput.focus();
-        }
+        });
 
-        // Add shake animation to CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            .shake {
-                animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        // Handle Enter key
+        passwordInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                loginForm.dispatchEvent(new Event('submit'));
             }
-            @keyframes shake {
-                10%, 90% { transform: translateX(-1px); }
-                20%, 80% { transform: translateX(2px); }
-                30%, 50%, 70% { transform: translateX(-4px); }
-                40%, 60% { transform: translateX(4px); }
-            }
-        `;
-        document.head.appendChild(style);
+        });
     </script>
 </body>
 

@@ -112,6 +112,22 @@
     .logout-btn:hover {
       background: #e74c3c;
     }
+
+    .missing-file {
+      opacity: 0.6;
+      background-color: #fff3cd;
+      border-color: #ffeaa7;
+    }
+
+    .missing-file:hover {
+      background-color: #fff3cd;
+    }
+
+    .file-status {
+      font-size: 12px;
+      color: #856404;
+      margin-left: 8px;
+    }
   </style>
 </head>
 
@@ -152,9 +168,9 @@
     }
   </script>
 
-  <!-- version: v6.8 (2025-08-15) -->
-  <div class="status-bar">v6.8 | Updated: 2025-08-15 16:00 (GMT+8) | Voice Content Speaker v6.8 with Apps Script
-    integration + Male voice priority</div>
+  <!-- version: v6.9 (2025-08-16) -->
+  <div class="status-bar">v6.9 | Updated: 2025-08-16 | Auth Protected + FacePack Dashboard | 🔐 Secure Access Enabled
+  </div>
 
   <button class="logout-btn" onclick="logout()">🚪 Logout</button>
 
@@ -178,23 +194,32 @@
 
   <script>
     const pages = [
-      { title: "AI Prompt Generator | AI 提示生成器", file: "ai_prompt_generator.html" },
-      { title: "Copilot Prompt Helper | Copilot 提示助手", file: "copilot_prompt.html" },
-      { title: "Website Cloner | 網站複製工具", file: "weblink_cloner.html" },
-      { title: "ABC Drive Viewer | ABC 雲端硬碟檢視器", file: "abc.html" },
-      { title: "ABC List (JSONP) | ABC 檔案列表", file: "ABC_List.html" },
-      { title: "ABC List Enhanced (JSONP) | ABC 檔案列表增強版", file: "abc_list_enhanced.html" },
-      { title: "Voice Content Speaker v6.8 | 語音內容播放器 + 資料面板", file: "voice.html" }
+      { title: "AI Prompt Generator | AI 提示生成器", file: "ai_prompt_generator.html", exists: false },
+      { title: "Copilot Prompt Helper | Copilot 提示助手", file: "copilot_prompt.html", exists: true },
+      { title: "Website Cloner | 網站複製工具", file: "weblink_cloner.html", exists: false },
+      { title: "ABC Drive Viewer | ABC 雲端硬碟檢視器", file: "abc.html", exists: false },
+      { title: "ABC List (JSONP) | ABC 檔案列表", file: "ABC_List.html", exists: false },
+      { title: "ABC List Enhanced (JSONP) | ABC 檔案列表增強版", file: "abc_list_enhanced.html", exists: false },
+      { title: "Voice Content Speaker v6.8 | 語音內容播放器 + 資料面板", file: "voice.html", exists: true },
+      { title: "FacePack.ID Dashboard | 面部識別數據面板", file: "facepack.html", exists: true },
+      { title: "Add Link Manager | 連結管理器", file: "add_link.html", exists: false }
     ];
 
     const pageList = document.getElementById("pageList");
 
     pages.forEach(page => {
       const listItem = document.createElement("li");
-      listItem.className = "page-item";
-      listItem.innerHTML = `<span class="page-title">${page.title}</span>`;
+      listItem.className = page.exists ? "page-item" : "page-item missing-file";
+
+      const statusText = page.exists ? "" : '<span class="file-status">(需要創建)</span>';
+      listItem.innerHTML = `<span class="page-title">${page.title}</span>${statusText}`;
+
       listItem.onclick = () => {
-        window.location.href = page.file;
+        if (page.exists) {
+          window.location.href = page.file;
+        } else {
+          alert(`檔案 ${page.file} 尚未創建。\n\nFile ${page.file} needs to be created.`);
+        }
       };
       pageList.appendChild(listItem);
     });
