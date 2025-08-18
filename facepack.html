@@ -1,7 +1,588 @@
-<!-- Update the Folder ID input field in facepack.html (around line 160) -->
-<div>
-    <label class="block text-sm font-medium mb-1">(Optional) Facepack Folder ID</label>
-    <input id="folderId" class="w-full border rounded-xl px-3 py-2" placeholder="Google Drive folder ID"
-        value="1hNf41iyyozx8DJC0aAj8wjDX6xMT8LPy">
-    <p class="text-xs text-slate-500 mt-1">✅ Pre-configured with your FacePack folder</p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FacePack.ID Dashboard | 面部識別數據面板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f38ba8;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 50;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        .back-button:hover {
+            background: #1d4ed8;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-ok {
+            background-color: #10b981;
+        }
+
+        .status-error {
+            background-color: #ef4444;
+        }
+
+        .endpoint-card {
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .endpoint-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .copy-success {
+            background-color: #10b981 !important;
+            color: white !important;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
+    <script>
+        // Auth protection
+        (function () {
+            const isAuthenticated = sessionStorage.getItem('cullinan30a_session') === 'true';
+            const authToken = localStorage.getItem('cullinan30a_auth');
+
+            if (!isAuthenticated || !authToken) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            try {
+                const decoded = atob(authToken).split('_');
+                const timestamp = parseInt(decoded[1], 10);
+                const expiry = 24 * 60 * 60 * 1000;
+
+                if (Date.now() - timestamp > expiry) {
+                    localStorage.removeItem('cullinan30a_auth');
+                    sessionStorage.removeItem('cullinan30a_session');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+            } catch (e) {
+                window.location.href = 'auth.html';
+                return;
+            }
+        })();
+
+        function logout() {
+            localStorage.removeItem('cullinan30a_auth');
+            sessionStorage.removeItem('cullinan30a_session');
+            window.location.href = 'auth.html';
+        }
+    </script>
+
+    <a href="index.html" class="back-button">← 返回首頁</a>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+
+    <header class="sticky top-0 z-10 backdrop-blur bg-white/70 border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold">FP</div>
+            <div>
+                <h1 class="text-xl font-semibold">FacePack.ID Dashboard v2.1</h1>
+                <p class="text-sm text-slate-500">Face Recognition Data Management System</p>
+            </div>
+            <div class="ml-auto">
+                <span id="connectionStatus" class="text-sm flex items-center">
+                    <span class="status-indicator status-error"></span>
+                    Ready to connect...
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+        <!-- Setup Section -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4">🔧 API Configuration</h2>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Base URL</label>
+                    <input id="baseUrl" type="url"
+                        class="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        placeholder="https://script.google.com/macros/s/YOUR_ID/exec" value="">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Passcode</label>
+                    <input id="passcode" type="password"
+                        class="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        placeholder="Enter passcode" value="">
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Folder ID (Optional)</label>
+                    <input id="folderId" class="w-full border rounded-xl px-3 py-2" placeholder="Drive folder ID">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Sheet ID (Optional)</label>
+                    <input id="sheetId" class="w-full border rounded-xl px-3 py-2" placeholder="Spreadsheet ID">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Sheet Name</label>
+                    <input id="sheetName" class="w-full border rounded-xl px-3 py-2" value="Facesheet">
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Demo Person ID</label>
+                    <input id="demoPersonId" class="w-full border rounded-xl px-3 py-2" value="demo001">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button onclick="testConnection()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">🔍 Test</button>
+                    <button onclick="useTestEndpoint()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">🧪 Demo API</button>
+                    <button onclick="resetConfig()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">🔄 Reset</button>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-sm">
+                <strong>⚠️ Setup Required:</strong> Configure your Apps Script endpoint or use demo mode for testing.
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4">⚡ Quick Actions</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="actionsGrid">
+                <!-- Actions generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Live Testing -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4">🧪 Live API Testing</h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Action</label>
+                    <select id="testAction" class="w-full border rounded-lg px-3 py-2">
+                        <option value="ping">ping - Health check</option>
+                        <option value="help">help - List endpoints</option>
+                        <option value="append">append - Add record</option>
+                        <option value="search">search - Find records</option>
+                        <option value="exportsheet">exportsheet - Export data</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Method</label>
+                    <select id="testMethod" class="w-full border rounded-lg px-3 py-2">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Payload (JSON)</label>
+                    <textarea id="testPayload" rows="4" class="w-full border rounded-lg px-3 py-2 font-mono text-sm"
+                        placeholder="{}"></textarea>
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <button onclick="runTest()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">🚀 Run Test</button>
+                    <button onclick="clearResults()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">🗑️ Clear</button>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Response</label>
+                    <div id="testResults"
+                        class="border rounded-lg p-3 bg-gray-50 font-mono text-sm min-h-[100px] overflow-auto">
+                        Results will appear here...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Schema -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4">📊 Data Schema</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium mb-2">Standard Fields</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm" id="fieldsList">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Score Fields (0-100)</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm" id="scoresList">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-lg font-semibold mb-4">📋 Activity Log</h2>
+            <div class="flex gap-2 mb-3">
+                <button onclick="clearLog()"
+                    class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700">Clear</button>
+                <button onclick="exportLog()"
+                    class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Export</button>
+            </div>
+            <div id="activityLog" class="border rounded-lg p-3 bg-gray-50 font-mono text-sm h-48 overflow-auto">
+                Activity log will appear here...
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Configuration
+        let config = {
+            baseUrl: '',
+            passcode: '',
+            folderId: '',
+            sheetId: '',
+            sheetName: 'Facesheet',
+            demoPersonId: 'demo001'
+        };
+
+        // Data definitions
+        const standardFields = [
+            'ts', 'person_id', 'person_name', 'profile', 'height_cm', 'weight_kg',
+            'eye_shape', 'nose_bridge', 'lips', 'face_shape', 'skin_tone',
+            'hair_color', 'hair_style', 'image_url', 'source', 'notes'
+        ];
+
+        const scoreFields = [
+            'eye_intensity', 'brow_prominence', 'nose_definition',
+            'lip_fullness', 'jaw_sharpness', 'skin_clarity', 'smile_degree'
+        ];
+
+        // Demo data
+        function getDemoData() {
+            return {
+                person_id: config.demoPersonId,
+                person_name: "Demo Person",
+                profile: "test",
+                height_cm: 170,
+                eye_shape: "round",
+                hair_color: "brown",
+                scores: {
+                    eye_intensity: 75,
+                    brow_prominence: 60,
+                    nose_definition: 55,
+                    lip_fullness: 45,
+                    jaw_sharpness: 70,
+                    skin_clarity: 80,
+                    smile_degree: 65
+                },
+                source: "dashboard-demo"
+            };
+        }
+
+        // Utility functions
+        function updateConfig() {
+            config.baseUrl = document.getElementById('baseUrl').value.trim();
+            config.passcode = document.getElementById('passcode').value.trim();
+            config.folderId = document.getElementById('folderId').value.trim();
+            config.sheetId = document.getElementById('sheetId').value.trim();
+            config.sheetName = document.getElementById('sheetName').value.trim();
+            config.demoPersonId = document.getElementById('demoPersonId').value.trim();
+
+            generateActions();
+        }
+
+        function makeUrl(action, params = {}) {
+            if (!config.baseUrl) return '#';
+
+            try {
+                const url = new URL(config.baseUrl);
+                url.searchParams.set('action', action);
+                if (config.passcode) {
+                    url.searchParams.set('passcode', config.passcode);
+                }
+                Object.entries(params).forEach(([key, value]) => {
+                    if (value) url.searchParams.set(key, value);
+                });
+                return url.toString();
+            } catch (e) {
+                return '#';
+            }
+        }
+
+        // Main functions
+        function useTestEndpoint() {
+            document.getElementById('baseUrl').value = 'https://httpbin.org/get';
+            document.getElementById('passcode').value = 'demo';
+            document.getElementById('folderId').value = 'demo-folder';
+            document.getElementById('demoPersonId').value = 'demo001';
+
+            updateConfig();
+            updateStatus('Using Test API (httpbin.org)', true);
+            logActivity('Setup', 'Using test endpoint for demo');
+            alert('✅ Demo API configured!\n\nUsing httpbin.org for testing.\nAll requests will return mock responses.');
+        }
+
+        function resetConfig() {
+            document.getElementById('baseUrl').value = '';
+            document.getElementById('passcode').value = '';
+            document.getElementById('folderId').value = '';
+            document.getElementById('sheetId').value = '';
+            document.getElementById('sheetName').value = 'Facesheet';
+            document.getElementById('demoPersonId').value = 'demo001';
+
+            updateConfig();
+            updateStatus('Configuration reset', false);
+            logActivity('Setup', 'Configuration cleared');
+        }
+
+        async function testConnection() {
+            updateConfig();
+
+            if (!config.baseUrl) {
+                alert('❌ Please enter a Base URL first!');
+                return;
+            }
+
+            updateStatus('Testing connection...', false);
+
+            try {
+                const testUrl = config.baseUrl.includes('httpbin.org')
+                    ? config.baseUrl
+                    : makeUrl('ping');
+
+                const response = await fetch(testUrl);
+                const data = await response.text();
+
+                if (response.ok) {
+                    updateStatus('✅ Connection successful!', true);
+                    logActivity('Connection Test', `Success: ${response.status}`);
+                    alert('✅ Connection successful!');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('❌ Connection failed', false);
+                logActivity('Connection Test', `Error: ${error.message}`);
+                alert(`❌ Connection failed: ${error.message}`);
+            }
+        }
+
+        function updateStatus(message, isSuccess) {
+            const statusEl = document.getElementById('connectionStatus');
+            const indicator = isSuccess ? 'status-ok' : 'status-error';
+            statusEl.innerHTML = `<span class="status-indicator ${indicator}"></span>${message}`;
+        }
+
+        function generateActions() {
+            const grid = document.getElementById('actionsGrid');
+            const actions = [
+                { name: 'Ping', action: 'ping', desc: 'Health check' },
+                { name: 'Help', action: 'help', desc: 'List endpoints' },
+                { name: 'Add Record', action: 'append', desc: 'Insert demo data' },
+                { name: 'Search', action: 'search', desc: 'Find records' },
+                { name: 'Export', action: 'exportsheet', desc: 'Export to JSON' }
+            ];
+
+            grid.innerHTML = '';
+            actions.forEach(action => {
+                let url = makeUrl(action.action);
+                if (action.action === 'append') {
+                    url = makeUrl('append', { row: encodeURIComponent(JSON.stringify(getDemoData())) });
+                } else if (action.action === 'search') {
+                    url = makeUrl('search', { person_id: config.demoPersonId });
+                }
+
+                const card = document.createElement('div');
+                card.className = 'endpoint-card border rounded-xl p-4';
+                card.innerHTML = `
+                    <h3 class="font-medium mb-1">${action.name}</h3>
+                    <p class="text-sm text-gray-600 mb-3">${action.desc}</p>
+                    <div class="flex gap-2">
+                        <button onclick="openUrl('${url}')" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                            Open
+                        </button>
+                        <button onclick="copyUrl('${url}', this)" class="px-3 py-1 border rounded text-sm hover:bg-gray-50">
+                            Copy
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function runTest() {
+            updateConfig();
+
+            const action = document.getElementById('testAction').value;
+            const method = document.getElementById('testMethod').value;
+            const payload = document.getElementById('testPayload').value;
+            const resultsEl = document.getElementById('testResults');
+
+            resultsEl.textContent = 'Running test...';
+
+            try {
+                const url = makeUrl(action);
+                const options = { method };
+
+                if (method === 'POST' && payload) {
+                    options.headers = { 'Content-Type': 'application/json' };
+                    options.body = payload;
+                }
+
+                const response = await fetch(url);
+                const data = await response.text();
+
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: data
+                };
+
+                resultsEl.textContent = JSON.stringify(result, null, 2);
+                logActivity(`Test ${action}`, `${method} ${response.status}`);
+
+            } catch (error) {
+                const errorResult = { error: error.message };
+                resultsEl.textContent = JSON.stringify(errorResult, null, 2);
+                logActivity(`Test ${action}`, `Error: ${error.message}`);
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').textContent = 'Results will appear here...';
+        }
+
+        function openUrl(url) {
+            if (url === '#') {
+                alert('❌ Please configure your endpoint first!');
+                return;
+            }
+            window.open(url, '_blank');
+            logActivity('Open URL', url);
+        }
+
+        async function copyUrl(url, button) {
+            try {
+                await navigator.clipboard.writeText(url);
+                const original = button.textContent;
+                button.textContent = '✅ Copied';
+                button.classList.add('copy-success');
+                setTimeout(() => {
+                    button.textContent = original;
+                    button.classList.remove('copy-success');
+                }, 2000);
+            } catch (error) {
+                alert('Copy failed');
+            }
+        }
+
+        function logActivity(action, details) {
+            const logEl = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${action}: ${details}\n`;
+            logEl.textContent += entry;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('activityLog').textContent = 'Activity log cleared...\n';
+        }
+
+        function exportLog() {
+            const log = document.getElementById('activityLog').textContent;
+            const blob = new Blob([log], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `facepack-log-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        function init() {
+            // Populate schema lists
+            const fieldsList = document.getElementById('fieldsList');
+            const scoresList = document.getElementById('scoresList');
+
+            standardFields.forEach(field => {
+                const span = document.createElement('span');
+                span.className = 'px-2 py-1 rounded bg-slate-100 text-slate-700';
+                span.textContent = field;
+                fieldsList.appendChild(span);
+            });
+
+            scoreFields.forEach(field => {
+                const span = document.createElement('span');
+                span.className = 'px-2 py-1 rounded bg-blue-100 text-blue-700';
+                span.textContent = field;
+                scoresList.appendChild(span);
+            });
+
+            // Event listeners
+            ['baseUrl', 'passcode', 'folderId', 'sheetId', 'sheetName', 'demoPersonId'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateConfig);
+            });
+
+            document.getElementById('testAction').addEventListener('change', function () {
+                const action = this.value;
+                let payload = '{}';
+
+                if (action === 'append') {
+                    payload = JSON.stringify(getDemoData(), null, 2);
+                }
+
+                document.getElementById('testPayload').value = payload;
+            });
+
+            updateConfig();
+            updateStatus('⚙️ Setup required - Configure endpoint', false);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
