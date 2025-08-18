@@ -15,7 +15,7 @@ git commit -m "🔐 feat: Complete auth-protected project deployment v6.9
 - facepack.html: Face recognition dashboard with live API testing
 
 🛡️ SECURITY FEATURES:
-- Multi-password authentication (cullinan2025, voice6.8, etc.)
+- Multi-password authentication
 - 24-hour token-based session management
 - Automatic session expiry and secure logout
 - Protected page access control across all pages
@@ -41,13 +41,6 @@ git push origin main
 echo "=== DEPLOYMENT COMPLETE ==="
 echo ""
 echo "🌐 Live Site: https://v0-cullinan30a.vercel.app/"
-echo "🔐 Authentication Required - Use any of these passwords:"
-echo "   • cullinan2025"
-echo "   • voice6.8"
-echo "   • apps-script-access"
-echo "   • facepack-dashboard"
-echo "   • auth-protection-2025"
-echo ""
 echo "✅ All pages now protected with 24-hour session authentication!"
 echo "🚪 Users can logout securely from any page"
-echo "📱 Mobile-responsive auth system with beautiful UI"
+echo "📱 Mobile-responsive auth system with
