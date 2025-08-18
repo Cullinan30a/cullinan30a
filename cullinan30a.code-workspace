@@ -1,0 +1,23 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.associations": {
+      "*.html": "html",
+      "*.js": "javascript"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "github.copilot",
+      "github.copilot-chat",
+      "bradlc.vscode-tailwindcss",
+      "formulahendry.auto-rename-tag",
+      "ms-vscode.live-server",
+      "esbenp.prettier-vscode"
+    ]
+  }
+}
