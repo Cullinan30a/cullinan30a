@@ -1,6 +1,6 @@
 # Cullinan30a Web Tools Collection 20/8/2025| 工具集合
 
-## Latest Update (v6.9)
+## Latest Update (v6.9) 20/08/2025
 
 - **Full authentication system**: All pages now require login via `auth.html` (multi-password, 24h session, logout)
 - **FacePack.ID dashboard**: Real-time API, activity log, ChatGPT integration
