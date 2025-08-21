@@ -185,43 +185,9 @@
     + Add New Website Link | + 添加新網站連結
   </button>
 
-  <button class="add-link-btn" style="background-color:#2563eb;margin-bottom:10px;" onclick="showReadmeModal()">
+  <button class="add-link-btn" style="background-color:#2563eb;margin-bottom:10px;" onclick="window.open('README.md', '_blank')">
     📄 Show README Info | 顯示專案說明
   </button>
-
-  <!-- README Modal -->
-  <div id="readmeModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:white;max-width:700px;width:90vw;max-height:80vh;overflow:auto;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:32px;position:relative;">
-      <button onclick="closeReadmeModal()" style="position:absolute;top:16px;right:16px;background:#f38ba8;color:white;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;">Close</button>
-      <h2 style="margin-top:0;margin-bottom:18px;font-size:1.3em;">README.md Information</h2>
-      <pre id="readmeContent" style="white-space:pre-wrap;font-size:14px;line-height:1.6;background:#f8f9fa;padding:16px;border-radius:8px;max-height:60vh;overflow:auto;"></pre>
-      <div id="readmeContent" style="font-size:15px;line-height:1.7;background:#f8f9fa;padding:16px;border-radius:8px;max-height:60vh;overflow:auto;word-break:break-word;"></div>
-    </div>
-  </div>
-    // README content (auto-generated)
-    // Minimal markdown-to-HTML converter
-    function markdownToHtml(md) {
-      let html = md;
-      html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-      html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-      html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-      html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
-      html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-      html = html.replace(/\n\n/gim, '<br><br>');
-      html = html.replace(/\n/gim, '<br>');
-      html = html.replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>');
-      html = html.replace(/^- (.*)$/gim, '<li>$1</li>');
-      html = html.replace(/<li>(.*?)<\/li>/gim, '<ul><li>$1</li></ul>');
-      return html;
-    }
-
-    function showReadmeModal() {
-      document.getElementById('readmeModal').style.display = 'flex';
-      document.getElementById('readmeContent').innerHTML = markdownToHtml(readmeText);
-    }
-    function closeReadmeModal() {
-      document.getElementById('readmeModal').style.display = 'none';
-    }
 
   <div class="user-links" id="userLinksSection" style="display: none;">
     <h3>Your Added Links | 您添加的連結</h3>
@@ -240,7 +206,8 @@
       { title: "ABC List Enhanced (JSONP) | ABC 檔案列表增強版", file: "abc_list_enhanced.html", exists: true },
       { title: "Voice Content Speaker v6.8 | 語音內容播放器 + 資料面板", file: "voice.html", exists: true },
       { title: "FacePack.ID Dashboard | 面部識別數據面板", file: "facepack.html", exists: true },
-      { title: "Add Link Manager | 連結管理器", file: "add_link.html", exists: true }
+      { title: "Add Link Manager | 連結管理器", file: "add_link.html", exists: true },
+      { title: "UI Demo | 使用者介面展示", file: "ui.html", exists: true }
     ];
 
     const pageList = document.getElementById("pageList");
