@@ -1,7 +1,14 @@
 #!/bin/bash
 
 
-echo "=== DEPLOYING CULLINAN30A v6.9 | AUTH + ABC DRIVE + README ==="
+VERSION_FILE="version.txt"
+if [ ! -f "$VERSION_FILE" ]; then
+  echo "6.9" > "$VERSION_FILE"
+fi
+VERSION=$(cat "$VERSION_FILE")
+NEW_VERSION=$(awk -F. '{OFS="."; $NF+=1; print $0}' <<< "$VERSION")
+echo "$NEW_VERSION" > "$VERSION_FILE"
+echo "=== DEPLOYING CULLINAN30A v$NEW_VERSION | AUTH + ABC DRIVE + README ==="
 cd /Users/hudsonmar/Documents/GitHub/cullinan30a
 
 
@@ -22,7 +29,9 @@ if [ -z "$CHANGED" ]; then
 else
   echo "Committing new/modified files: $CHANGED"
   git add $CHANGED
-  git commit -m $'🔐 feat: Deploy v6.9 | Auto commit new/modified files\n\nAuto-commit: $CHANGED\n\n✅ AUTH SYSTEM, ABC Drive, README, Index Mapping, UI Demo, and more.'
+sed -i '' "s/v[0-9]\+\.[0-9]\+/v$NEW_VERSION/g" index.html
+sed -i '' "s/v[0-9]\+\.[0-9]\+/v$NEW_VERSION/g" deploy.sh
+git commit -m $"🔐 feat: Deploy v$NEW_VERSION | Auto commit new/modified files\n\nAuto-commit: $CHANGED\n\n✅ AUTH SYSTEM, ABC Drive, README, Index Mapping, UI Demo, and more."
 fi
 
 # Push to GitHub (triggers Vercel auto-deployment)
