@@ -1,0 +1,199 @@
+cd ~/chatgpt-automation
+cat > ui.html <<'EOF'
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChatGPT Drive Console</title>
+<style>
+  :root{--bg:#0b0f14;--card:#121821;--ink:#e6edf3;--muted:#9fb0c0;--accent:#3aa3ff;--accent-2:#21d19f;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px;}
+  .grid{display:grid;grid-template-columns:1fr 380px;gap:16px;}
+  .card{background:var(--card);border:1px solid #1f2835;border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.35)}
+  .head{padding:18px 20px;border-bottom:1px solid #1f2835;font-weight:700}
+  .body{padding:16px 20px}
+  .muted{color:var(--muted);font-size:13px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+  .row > *{flex:1}
+  input,select,textarea{width:100%;background:#0f141c;border:1px solid #233043;color:var(--ink);padding:10px 12px;border-radius:12px}
+  textarea{min-height:180px;font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace}
+  button{background:var(--accent);border:0;color:#001428;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+  button.secondary{background:#1f2835;color:var(--ink)}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .hide{display:none}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#182231;color:var(--muted);font-size:12px;margin-right:6px}
+  .ok{color:var(--accent-2);font-weight:700}
+  .danger{color:#ff6b6b;font-weight:700}
+  .hr{height:1px;background:#1f2835;margin:12px 0}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="grid">
+      <div class="card">
+        <div class="head">控制台 · ChatGPT Drive Functions</div>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label>Passcode</label>
+              <input id="passcode" type="password" placeholder="輸入 WEBHOOK_PASSCODE" />
+            </div>
+            <div>
+              <label>動作（Action）</label>
+              <select id="action">
+                <option value="ping">ping</option>
+                <option value="version">version</option>
+                <option value="version_bump">version_bump</option>
+                <option value="init_structure">init_structure</option>
+                <option value="build_report">build_report</option>
+                <option value="facepack_index">facepack_index</option>
+                <option value="upload_from_url">upload_from_url</option>
+                <option value="upload_base64">upload_base64</option>
+                <option value="list">list</option>
+                <option value="update">update</option>
+                <option value="backup">backup</option>
+                <option value="move">move</option>
+                <option value="delete">delete</option>
+                <option value="getvoicecontent">getvoicecontent</option>
+                <option value="savevoicecontent">savevoicecontent</option>
+                <option value="listversionhistory">listversionhistory</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="fields">
+            <div class="hr"></div>
+
+            <div id="fld-version_bump" class="row hide">
+              <div><label>inc</label>
+                <select id="inc">
+                  <option value="patch">patch</option>
+                  <option value="minor">minor</option>
+                  <option value="major">major</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="fld-upload_from_url" class="row hide">
+              <div><label>url</label><input id="url" placeholder="https://..." /></div>
+              <div><label>folder</label><input id="folder" placeholder="Facepack/Style 或 Inbox" /></div>
+              <div><label>name</label><input id="name" placeholder="可選：demo.jpg" /></div>
+            </div>
+
+            <div id="fld-upload_base64" class="row hide">
+              <div><label>base64</label><textarea id="base64" placeholder="data:image/jpeg;base64,..."></textarea></div>
+              <div><label>folder</label><input id="folder2" placeholder="Inbox" /></div>
+              <div><label>name</label><input id="name2" placeholder="clip.jpg" /></div>
+            </div>
+
+            <div id="fld-list" class="row hide">
+              <div><label>folderId</label><input id="folderId" placeholder="Google Drive 資料夾 ID" /></div>
+            </div>
+
+            <div id="fld-update" class="row hide">
+              <div><label>fileId</label><input id="fileId1" /></div>
+              <div><label>newName</label><input id="newName" /></div>
+            </div>
+
+            <div id="fld-backup" class="row hide">
+              <div><label>fileId</label><input id="fileId2" /></div>
+            </div>
+
+            <div id="fld-move" class="row hide">
+              <div><label>fileId</label><input id="fileId3" /></div>
+              <div><label>targetFolderId</label><input id="targetFolderId" /></div>
+            </div>
+
+            <div id="fld-delete" class="row hide">
+              <div><label>fileId</label><input id="fileId4" /></div>
+            </div>
+
+            <div id="fld-getvoicecontent" class="row hide">
+              <div><label>version（可留空 latest）</label><input id="vcVersion" /></div>
+            </div>
+
+            <div id="fld-savevoicecontent" class="row hide">
+              <div><label>professional</label><textarea id="vcPro" placeholder="專業版內容"></textarea></div>
+              <div><label>warm</label><textarea id="vcWarm" placeholder="溫暖版內容"></textarea></div>
+              <div><label>topic</label><input id="vcTopic" placeholder="主題" /></div>
+              <div><label>source</label><input id="vcSource" placeholder="來源（預設 ChatGPT）" /></div>
+            </div>
+
+            <div id="fld-listversionhistory" class="row hide">
+              <div><label>limit</label><input id="vcLimit" value="10" /></div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button id="run">RUN</button>
+            <button id="reset" class="secondary">Reset</button>
+            <span class="pill">UI v1.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="head">結果 / Result</div>
+        <div class="body">
+          <div class="muted">回應會顯示於下方，JSON 已縮排。</div>
+          <textarea id="output" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+  const sections = [
+    'version_bump','upload_from_url','upload_base64','list','update','backup','move','delete',
+    'getvoicecontent','savevoicecontent','listversionhistory'
+  ];
+
+  function setFields(){
+    sections.forEach(s=>{ const el=$('fld-'+s); if(el) el.classList.add('hide'); });
+    const act = $('action').value;
+    const has = $('fld-'+act);
+    if (has) has.classList.remove('hide');
+  }
+
+  $('action').addEventListener('change', setFields);
+  setFields();
+
+  $('reset').addEventListener('click', ()=>{
+    $('output').value='';
+  });
+
+  $('run').addEventListener('click', ()=>{
+    const action = $('action').value;
+    const passcode = $('passcode').value || '';
+    const p = { action, passcode };
+
+    if (action==='version_bump') p.inc = $('inc').value;
+    if (action==='upload_from_url'){ p.url=$('url').value; p.folder=$('folder').value; p.name=$('name').value; }
+    if (action==='upload_base64'){ p.base64=$('base64').value; p.folder=$('folder2').value; p.name=$('name2').value; p.__method='POST'; }
+    if (action==='list'){ p.folderId=$('folderId').value; }
+    if (action==='update'){ p.fileId=$('fileId1').value; p.newName=$('newName').value; }
+    if (action==='backup'){ p.fileId=$('fileId2').value; }
+    if (action==='move'){ p.fileId=$('fileId3').value; p.targetFolderId=$('targetFolderId').value; }
+    if (action==='delete'){ p.fileId=$('fileId4').value; }
+    if (action==='getvoicecontent'){ p.version=$('vcVersion').value; }
+    if (action==='savevoicecontent'){ p.professional=$('vcPro').value; p.warm=$('vcWarm').value; p.topic=$('vcTopic').value; p.source=$('vcSource').value; }
+    if (action==='listversionhistory'){ p.limit=$('vcLimit').value; }
+
+    if (typeof google !== 'undefined' && google.script && google.script.run){
+      google.script.run
+        .withSuccessHandler((res)=>{ $('output').value = JSON.stringify(res, null, 2); })
+        .withFailureHandler((err)=>{ $('output').value = 'ERROR: '+ (err && err.message ? err.message : String(err)); })
+        .serverInvoke(p);
+    } else {
+      $('output').value = 'This UI must run inside Apps Script Web App.';
+    }
+  });
+})();
+</script>
+</body>
+</html>
+EOF
