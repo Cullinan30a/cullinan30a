@@ -17,24 +17,21 @@
             </div>
         </header>
 
+        <!-- API Configuration removed: now uses environment variables -->
         <section class="bg-white rounded-2xl shadow-sm border p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4">🔧 API Configuration</h2>
+            <h2 class="text-lg font-semibold mb-4">🔧 API Environment</h2>
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Webhook Endpoint</label>
-                    <input id="baseUrl" type="url" class="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="https://...">
+                    <div id="envEndpoint" class="w-full border rounded-xl px-3 py-2 bg-gray-100 text-gray-700"></div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Passcode</label>
-                    <input id="passcode" type="password" class="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Enter passcode">
+                    <div id="envPasscode" class="w-full border rounded-xl px-3 py-2 bg-gray-100 text-gray-700"></div>
                 </div>
             </div>
-            <div class="flex gap-2 mt-4">
-                <button onclick="useTestEndpoint()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">🧪 Demo API</button>
-                <button onclick="resetConfig()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">🔄 Reset</button>
-            </div>
-            <div class="mt-4 p-3 rounded-xl bg-yellow-50 border border-yellow-200 text-sm">
-                <strong>⚠️ Setup Required:</strong> Configure your webhook endpoint or use demo mode for testing.
+            <div class="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-sm">
+                <strong>✅ Environment:</strong> Using environment webhook endpoint and passcode for all requests.
             </div>
         </section>
 
@@ -52,10 +49,7 @@
                         <option value="GET">GET</option>
                     </select>
                 </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium mb-2">Payload (JSON)</label>
-                    <textarea id="testPayload" rows="4" class="w-full border rounded-lg px-3 py-2 font-mono text-sm" placeholder="{}"></textarea>
-                </div>
+                <div class="md:col-span-2" id="extraFields"></div>
                 <div class="md:col-span-2 flex gap-2">
                     <button onclick="runTest()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">🚀 Run Test</button>
                     <button onclick="clearResults()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">🗑️ Clear</button>
@@ -79,19 +73,33 @@
 
     <script>
         // --- Config Logic ---
-        let config = {
-            baseUrl: '',
-            passcode: ''
+        // --- Environment Variables ---
+        // These should be set by the server or injected at build time
+        // For demo, fallback to window.ENV or hardcoded values
+        const ENV = window.ENV || {
+            WEBHOOK_ENDPOINT: window.WEBHOOK_ENDPOINT || 'https://your-webhook-endpoint.example.com',
+            WEBHOOK_PASSCODE: window.WEBHOOK_PASSCODE || 'your-secret-passcode'
         };
 
-        // List of available webhook actions
+        // List of available webhook actions and their extra fields (from screenshot and user table)
         const actions = [
-            { name: 'ping', desc: 'Health check', payload: '{"action": "ping"}' },
-            { name: 'help', desc: 'List endpoints', payload: '{"action": "help"}' },
-            { name: 'append', desc: 'Add record', payload: '{"action": "append", "data": {}}' },
-            { name: 'search', desc: 'Find records', payload: '{"action": "search", "query": {}}' },
-            { name: 'exportsheet', desc: 'Export data', payload: '{"action": "exportsheet"}' },
-            { name: 'custom', desc: 'Custom payload', payload: '{}' }
+            { name: 'ping', desc: '測試 API 是否正常', fields: [] },
+            { name: 'version', desc: '顯示目前版本號', fields: [] },
+            { name: 'version_bump', desc: '升級版本號', fields: [ { id: 'inc', label: 'Increment', type: 'select', options: ['patch','minor','major'] } ] },
+            { name: 'init_structure', desc: '建立基礎資料夾結構', fields: [] },
+            { name: 'build_report', desc: '產生報告', fields: [] },
+            { name: 'facepack_index', desc: '整理 Facepack 清單', fields: [] },
+            { name: 'upload_from_url', desc: '由 URL 上載檔案去指定資料夾', fields: [ { id: 'url', label: 'File URL', type: 'text' }, { id: 'folder', label: 'Folder', type: 'text' }, { id: 'name', label: 'File Name', type: 'text' } ] },
+            { name: 'upload_base64', desc: '上載 base64 圖片/檔案去資料夾', fields: [ { id: 'base64', label: 'Base64', type: 'textarea' }, { id: 'folder', label: 'Folder', type: 'text' }, { id: 'name', label: 'File Name', type: 'text' } ] },
+            { name: 'list', desc: '列出資料夾內容', fields: [ { id: 'folderId', label: 'Folder ID', type: 'text' } ] },
+            { name: 'update', desc: '改檔案名稱', fields: [ { id: 'fileId', label: 'File ID', type: 'text' }, { id: 'newName', label: 'New Name', type: 'text' } ] },
+            { name: 'backup', desc: '建立檔案備份', fields: [ { id: 'fileId', label: 'File ID', type: 'text' } ] },
+            { name: 'move', desc: '搬移檔案去另一資料夾', fields: [ { id: 'fileId', label: 'File ID', type: 'text' }, { id: 'targetFolderId', label: 'Target Folder ID', type: 'text' } ] },
+            { name: 'delete', desc: '刪除檔案', fields: [ { id: 'fileId', label: 'File ID', type: 'text' } ] },
+            { name: 'getvoicecontent', desc: '取回最新/指定版本嘅 VoiceContent', fields: [ { id: 'version', label: 'Version', type: 'text' } ] },
+            { name: 'savevoicecontent', desc: '儲存 VoiceContent（專業版+溫暖版）', fields: [ { id: 'professional', label: 'Professional', type: 'textarea' }, { id: 'warm', label: 'Warm', type: 'textarea' }, { id: 'topic', label: 'Topic', type: 'text' }, { id: 'source', label: 'Source', type: 'text' } ] },
+            { name: 'listversionhistory', desc: '顯示 VoiceContent 歷史版本', fields: [ { id: 'limit', label: 'Limit', type: 'number' } ] },
+            { name: 'custom', desc: 'Custom payload', fields: [ { id: 'customPayload', label: 'Custom JSON', type: 'textarea' } ] }
         ];
 
         // Populate dropdown
@@ -107,58 +115,92 @@
         }
         populateActions();
 
-        // Show default payload for selected action
-        document.getElementById('testAction').addEventListener('change', function() {
-            const selected = actions.find(a => a.name === this.value);
-            document.getElementById('testPayload').value = selected ? selected.payload : '{}';
-        });
-        document.getElementById('testAction').dispatchEvent(new Event('change'));
+        // Show extra fields for selected action
+        function showExtraFields() {
+            const selectedAction = document.getElementById('testAction').value;
+            const actionObj = actions.find(a => a.name === selectedAction);
+            const container = document.getElementById('extraFields');
+            container.innerHTML = '';
+            if (!actionObj || !actionObj.fields.length) return;
+            actionObj.fields.forEach(field => {
+                let fieldHtml = '';
+                if (field.type === 'select') {
+                    fieldHtml = `<label class='block text-sm font-medium mb-1'>${field.label}</label><select id='${field.id}' class='w-full border rounded-lg px-3 py-2 mb-4'>${field.options.map(opt => `<option value='${opt}'>${opt}</option>`).join('')}</select>`;
+                } else if (field.type === 'textarea') {
+                    fieldHtml = `<label class='block text-sm font-medium mb-1'>${field.label}</label><textarea id='${field.id}' rows='2' class='w-full border rounded-lg px-3 py-2 font-mono text-sm mb-4'></textarea>`;
+                } else {
+                    fieldHtml = `<label class='block text-sm font-medium mb-1'>${field.label}</label><input id='${field.id}' type='${field.type}' class='w-full border rounded-lg px-3 py-2 mb-4' />`;
+                }
+                container.innerHTML += `<div>${fieldHtml}</div>`;
+            });
+        }
+        document.getElementById('testAction').addEventListener('change', showExtraFields);
+        showExtraFields();
 
-        // Use demo endpoint
-        function useTestEndpoint() {
-            document.getElementById('baseUrl').value = 'https://httpbin.org/post';
-            document.getElementById('passcode').value = 'demo';
-            config.baseUrl = 'https://httpbin.org/post';
-            config.passcode = 'demo';
-            logActivity('Setup', 'Using test endpoint for demo');
-            alert('✅ Demo API configured!\nAll requests will return mock responses.');
-        }
-        function resetConfig() {
-            document.getElementById('baseUrl').value = '';
-            document.getElementById('passcode').value = '';
-            config.baseUrl = '';
-            config.passcode = '';
-            logActivity('Setup', 'Configuration cleared');
-        }
+        // No manual endpoint/passcode config: always use ENV
 
         // Run test
         async function runTest() {
-            config.baseUrl = document.getElementById('baseUrl').value.trim();
-            config.passcode = document.getElementById('passcode').value.trim();
+            const url = ENV.WEBHOOK_ENDPOINT;
+            const passcode = ENV.WEBHOOK_PASSCODE;
+            document.getElementById('envEndpoint').textContent = url;
+            document.getElementById('envPasscode').textContent = passcode;
             const action = document.getElementById('testAction').value;
             const method = document.getElementById('testMethod').value;
-            let payload = document.getElementById('testPayload').value;
             const resultsEl = document.getElementById('testResults');
-            resultsEl.textContent = 'Running test...';
-            try {
-                let url = config.baseUrl;
-                let options = { method };
-                let bodyObj = {};
-                if (method === 'POST') {
-                    try { bodyObj = JSON.parse(payload); } catch { bodyObj = {}; }
-                    bodyObj.passcode = config.passcode;
-                    options.headers = { 'Content-Type': 'application/json' };
-                    options.body = JSON.stringify(bodyObj);
+            let payloadObj = { action };
+            // Collect extra fields
+            const actionObj = actions.find(a => a.name === action);
+            if (actionObj && actionObj.fields.length) {
+                actionObj.fields.forEach(field => {
+                    let val = document.getElementById(field.id)?.value;
+                    if (field.type === 'number') val = Number(val);
+                    payloadObj[field.id] = val;
+                });
+                if (action === 'custom') {
+                    try {
+                        payloadObj = JSON.parse(document.getElementById('customPayload').value);
+                    } catch {
+                        resultsEl.textContent = 'ERROR: Custom JSON is not valid.';
+                        return;
+                    }
                 }
-                if (!url) throw new Error('Please enter a Webhook Endpoint URL');
+            }
+            payloadObj.passcode = passcode;
+            let options = { method };
+            if (method === 'POST') {
+                options.headers = { 'Content-Type': 'application/json' };
+                options.body = JSON.stringify(payloadObj);
+            }
+            if (!url) {
+                resultsEl.textContent = 'ERROR: Environment WEBHOOK_ENDPOINT not set.';
+                return;
+            }
+            // Show debug info before sending
+            resultsEl.textContent =
+                '--- REQUEST DEBUG ---\n' +
+                'Endpoint: ' + url + '\n' +
+                'Method: ' + method + '\n' +
+                'Payload: ' + JSON.stringify(payloadObj, null, 2) + '\n\nSending request...';
+            try {
                 const response = await fetch(url, options);
                 const data = await response.text();
                 const result = { status: response.status, statusText: response.statusText, body: data };
-                resultsEl.textContent = JSON.stringify(result, null, 2);
+                resultsEl.textContent =
+                    '--- REQUEST DEBUG ---\n' +
+                    'Endpoint: ' + url + '\n' +
+                    'Method: ' + method + '\n' +
+                    'Payload: ' + JSON.stringify(payloadObj, null, 2) + '\n\n--- RESPONSE ---\n' +
+                    JSON.stringify(result, null, 2);
                 logActivity(`Test ${action}`, `${method} ${response.status}`);
             } catch (error) {
                 const errorResult = { error: error.message };
-                resultsEl.textContent = JSON.stringify(errorResult, null, 2);
+                resultsEl.textContent =
+                    '--- REQUEST DEBUG ---\n' +
+                    'Endpoint: ' + url + '\n' +
+                    'Method: ' + method + '\n' +
+                    'Payload: ' + JSON.stringify(payloadObj, null, 2) + '\n\n--- ERROR ---\n' +
+                    JSON.stringify(errorResult, null, 2);
                 logActivity(`Test ${action}`, `Error: ${error.message}`);
             }
         }
