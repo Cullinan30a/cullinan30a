@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+<!--
+  GAS webhook config is now loaded from environment variables for frontend security.
+  See .env and .gitignore for details.
+-->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ChatGPT Drive Console</title>
@@ -126,6 +130,7 @@
 
           <div class="row" style="margin-top:10px">
             <button id="run">RUN</button>
+            <button id="preset" style="background:#2563eb;color:#fff;margin-left:8px;" type="button">Preset Test</button>
             <button id="reset" class="secondary">Reset</button>
             <span class="pill">UI v1.0</span>
           </div>
@@ -144,6 +149,16 @@
 
 <script>
 (function(){
+  // Preset test values
+  const TEST_PASSCODE = 'nucsup-vunset-4hyhnl';
+  const TEST_FOLDERID = '<GOOGLE_DRIVE_FOLDER_ID_Inbox>';
+
+  $('preset').addEventListener('click', () => {
+    $('passcode').value = TEST_PASSCODE;
+    if ($('folderId')) $('folderId').value = TEST_FOLDERID;
+    if ($('folder')) $('folder').value = TEST_FOLDERID;
+    if ($('folder2')) $('folder2').value = TEST_FOLDERID;
+  });
   const $ = (id)=>document.getElementById(id);
   const sections = [
     'version_bump','upload_from_url','upload_base64','list','update','backup','move','delete',
@@ -170,9 +185,20 @@
     const p = { action, passcode };
 
     if (action==='version_bump') p.inc = $('inc').value;
-    if (action==='upload_from_url'){ p.url=$('url').value; p.folder=$('folder').value; p.name=$('name').value; }
-    if (action==='upload_base64'){ p.base64=$('base64').value; p.folder=$('folder2').value; p.name=$('name2').value; p.__method='POST'; }
-    if (action==='list'){ p.folderId=$('folderId').value; }
+    if (action==='upload_from_url'){
+      p.url=$('url').value;
+      p.folder=$('folder').value || TEST_FOLDERID;
+      p.name=$('name').value;
+    }
+    if (action==='upload_base64'){
+      p.base64=$('base64').value;
+      p.folder=$('folder2').value || TEST_FOLDERID;
+      p.name=$('name2').value;
+      p.__method='POST';
+    }
+    if (action==='list'){
+      p.folderId=$('folderId').value || TEST_FOLDERID;
+    }
     if (action==='update'){ p.fileId=$('fileId1').value; p.newName=$('newName').value; }
     if (action==='backup'){ p.fileId=$('fileId2').value; }
     if (action==='move'){ p.fileId=$('fileId3').value; p.targetFolderId=$('targetFolderId').value; }
@@ -181,15 +207,37 @@
     if (action==='savevoicecontent'){ p.professional=$('vcPro').value; p.warm=$('vcWarm').value; p.topic=$('vcTopic').value; p.source=$('vcSource').value; }
     if (action==='listversionhistory'){ p.limit=$('vcLimit').value; }
 
-    // Project fallback: show JSON for local/dev, Apps Script for prod
+    // If Apps Script, use google.script.run; else, send to webhook via fetch
     if (typeof google !== 'undefined' && google.script && google.script.run){
       google.script.run
         .withSuccessHandler((res)=>{ $('output').value = JSON.stringify(res, null, 2); })
         .withFailureHandler((err)=>{ $('output').value = 'ERROR: '+ (err && err.message ? err.message : String(err)); })
         .serverInvoke(p);
     } else {
-      // Fallback: show the request JSON for local/dev
-      $('output').value = 'Request JSON (local/dev):\n' + JSON.stringify(p, null, 2);
+      // Send POST request to webhook endpoint and display response
+      const endpoint = (window.WEBHOOK_URL || localStorage.getItem('WEBHOOK_URL') || ($('webapp') ? $('webapp').value : '')).trim();
+      if (!endpoint) {
+        $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
+        return;
+      }
+      $('output').value = '⏳ Sending request...';
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p)
+      })
+      .then(async res => {
+        let text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          $('output').value = JSON.stringify(json, null, 2);
+        } catch {
+          $('output').value = text;
+        }
+      })
+      .catch(err => {
+        $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
+      });
     }
   });
 })();
@@ -387,7 +435,30 @@ cat > ui.html <<'EOF'
         .withFailureHandler((err)=>{ $('output').value = 'ERROR: '+ (err && err.message ? err.message : String(err)); })
         .serverInvoke(p);
     } else {
-      $('output').value = 'Request JSON (local/dev):\n' + JSON.stringify(p, null, 2);
+      // Send POST request to webhook endpoint and display response
+      const endpoint = (window.WEBHOOK_URL || localStorage.getItem('WEBHOOK_URL') || ($('webapp') ? $('webapp').value : '')).trim();
+      if (!endpoint) {
+        $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
+        return;
+      }
+      $('output').value = '⏳ Sending request...';
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p)
+      })
+      .then(async res => {
+        let text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          $('output').value = JSON.stringify(json, null, 2);
+        } catch {
+          $('output').value = text;
+        }
+      })
+      .catch(err => {
+        $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
+      });
     }
   });
 })();
