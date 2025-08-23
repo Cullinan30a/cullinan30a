@@ -40,8 +40,18 @@
 
     <div class="card grid two">
       <div>
-        <label>Action（可留空）</label>
-        <input id="action" placeholder="savevoicecontent 或其他">
+        <label>Action</label>
+        <select id="action">
+          <option value="">（手動）</option>
+          <option value="savevoicecontent">savevoicecontent</option>
+          <option value="getvoicecontent">getvoicecontent</option>
+          <option value="list">list</option>
+          <option value="update">update</option>
+          <option value="backup">backup</option>
+          <option value="move">move</option>
+          <option value="delete">delete</option>
+          <option value="custom">custom</option>
+        </select>
       </div>
       <div class="row">
         <div style="flex:1">
@@ -52,7 +62,7 @@
           </select>
         </div>
         <div class="row" style="align-items:center;gap:12px">
-          <label class="muted"><input type="checkbox" id="remember"> 記住 endpoint / passcode</label>
+          <label class="muted"><input type="checkbox" id="remember"> 記住 endpoint / passcode / action</label>
         </div>
       </div>
     </div>
@@ -105,42 +115,114 @@
     const clearLogBtn = qs('#clearLog');
     const exportLogBtn = qs('#exportLog');
 
-    const LS_KEYS = {ep:'wt_endpoint', pc:'wt_passcode', ac:'wt_action'};
+    const LS_KEYS = {ep:'wt_endpoint', pc:'wt_passcode', ac:'wt_action', md:'wt_method', pl:'wt_payload'};
+    const templates = {
+      savevoicecontent: {
+        method: 'POST',
+        body: {
+          professional: "Text for professional",
+          warm: "Text for warm",
+          type: "script",
+          topic: "demo",
+          timestamp: "{NOW}"
+        }
+      },
+      getvoicecontent: {
+        method: 'GET',
+        body: {}
+      },
+      list: {
+        method: 'GET',
+        body: {}
+      },
+      update: {
+        method: 'POST',
+        body: {
+          id: "123",
+          fields: {"key":"value"},
+          timestamp: "{NOW}"
+        }
+      },
+      backup: {
+        method: 'POST',
+        body: {
+          scope: "all",
+          note: "manual backup",
+          timestamp: "{NOW}"
+        }
+      },
+      move: {
+        method: 'POST',
+        body: {
+          fileId: "xxxxxxxx",
+          targetFolderId: "xxxxxxxx",
+          timestamp: "{NOW}"
+        }
+      },
+      delete: {
+        method: 'POST',
+        body: {
+          fileId: "xxxxxxxx",
+          soft: true,
+          timestamp: "{NOW}"
+        }
+      },
+      custom: {
+        method: 'POST',
+        body: {
+          demo: "custom",
+          timestamp: "{NOW}"
+        }
+      }
+    };
+
     function now(){ return new Date().toISOString(); }
     function addLog(msg){ logEl.textContent += `[${now()}] ${msg}\n`; logEl.scrollTop = logEl.scrollHeight; }
+    function injectNow(text){ return text.replaceAll('{NOW}', now()); }
+    function fmt(obj){ return JSON.stringify(obj, null, 2); }
+
+    function applyTemplate(action){
+      const t = templates[action];
+      if(!t) return;
+      methodEl.value = t.method || 'POST';
+      payloadEl.value = fmt(t.body || {});
+    }
+
     function saveIfNeeded(){
       if(!rememberEl.checked) return;
       localStorage.setItem(LS_KEYS.ep, endpointEl.value||'');
       localStorage.setItem(LS_KEYS.pc, passcodeEl.value||'');
       localStorage.setItem(LS_KEYS.ac, actionEl.value||'');
+      localStorage.setItem(LS_KEYS.md, methodEl.value||'POST');
+      localStorage.setItem(LS_KEYS.pl, payloadEl.value||'');
     }
+
     function loadFromLS(){
       const ep = localStorage.getItem(LS_KEYS.ep)||'';
       const pc = localStorage.getItem(LS_KEYS.pc)||'';
       const ac = localStorage.getItem(LS_KEYS.ac)||'';
+      const md = localStorage.getItem(LS_KEYS.md)||'POST';
+      const pl = localStorage.getItem(LS_KEYS.pl)||'';
       if(ep) endpointEl.value = ep;
       if(pc) passcodeEl.value = pc;
-      if(ac) actionEl.value = ac;
-      rememberEl.checked = !!ep || !!pc || !!ac;
+      if(ac){ actionEl.value = ac; applyTemplate(ac); }
+      if(md) methodEl.value = md;
+      if(pl) payloadEl.value = pl;
+      rememberEl.checked = !!ep || !!pc || !!ac || !!pl;
     }
-    function fmtJSON(text){
-      try{ return JSON.stringify(JSON.parse(text), null, 2); }catch(e){ return text; }
-    }
-    function injectNow(text){
-      return text.replaceAll('{NOW}', now());
-    }
+
     async function run(){
       const endpoint = (endpointEl.value||'').trim();
       if(!endpoint){ responseEl.textContent = '❌ 請輸入 Webhook Endpoint'; return; }
       const method = methodEl.value;
+      const action = actionEl.value;
       const params = new URLSearchParams();
-      if(actionEl.value) params.append('action', actionEl.value);
+      if(action) params.append('action', action);
       if(passcodeEl.value) params.append('passcode', passcodeEl.value);
       let url = endpoint;
-      const isGET = method === 'GET';
       let body = null;
 
-      if(isGET){
+      if(method === 'GET'){
         const qsChar = url.includes('?') ? '&' : '?';
         url = url + (params.toString() ? qsChar + params.toString() : '');
       }else{
@@ -157,8 +239,8 @@
       try{
         const res = await fetch(url, {
           method,
-          headers: isGET ? {} : {'Content-Type':'application/json'},
-          body: isGET ? undefined : body
+          headers: method === 'GET' ? {} : {'Content-Type':'application/json'},
+          body: method === 'GET' ? undefined : body
         });
         const text = await res.text();
         let out = text;
@@ -171,19 +253,6 @@
       }
     }
 
+    actionEl.addEventListener('change', e=> applyTemplate(e.target.value));
     runBtn.addEventListener('click', run);
-    clearRespBtn.addEventListener('click', ()=> responseEl.textContent = 'Results will appear here...');
-    clearLogBtn.addEventListener('click', ()=> logEl.textContent = '');
-    exportLogBtn.addEventListener('click', ()=>{
-      const blob = new Blob([logEl.textContent], {type:'text/plain'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `webhook_tester_log_${Date.now()}.txt`;
-      a.click();
-    });
-
-    loadFromLS();
-    addLog('Ready.');
-  </script>
-</body>
-</html>
+    clearRespBtn.add
