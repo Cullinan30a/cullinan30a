@@ -299,9 +299,11 @@ cat > ui.html <<'EOF'
           </div>
 
           <div class="row" style="margin-top:10px">
-            <button id="run">RUN</button>
-            <button id="reset" class="secondary">Reset</button>
-            <span class="pill">UI v1.0</span>
+  <input id="webapp" type="text" placeholder="ChatGPT Webhook Endpoint URL" style="width:50%;margin-right:8px;" />
+  <button id="run">Send to ChatGPT Webhook</button>
+  <button id="reset" class="secondary">Reset</button>
+  <span class="pill">UI v1.0</span>
+  <div class="muted" style="margin-top:6px;">This button will activate the script and send your request to the ChatGPT webhook endpoint above.</div>
           </div>
         </div>
       </div>
@@ -342,35 +344,36 @@ cat > ui.html <<'EOF'
   });
 
   $('run').addEventListener('click', ()=>{
-    const action = $('action').value;
-    const passcode = $('passcode').value || '';
+    const action = document.getElementById('action').value;
+    const passcode = document.getElementById('passcode').value || '';
     const p = { action, passcode };
 
     if (action==='version_bump') p.inc = $('inc').value;
-    if (action==='upload_from_url'){ p.url=$('url').value; p.folder=$('folder').value; p.name=$('name').value; }
-    if (action==='upload_base64'){ p.base64=$('base64').value; p.folder=$('folder2').value; p.name=$('name2').value; p.__method='POST'; }
-    if (action==='list'){ p.folderId=$('folderId').value; }
-    if (action==='update'){ p.fileId=$('fileId1').value; p.newName=$('newName').value; }
-    if (action==='backup'){ p.fileId=$('fileId2').value; }
-    if (action==='move'){ p.fileId=$('fileId3').value; p.targetFolderId=$('targetFolderId').value; }
-    if (action==='delete'){ p.fileId=$('fileId4').value; }
-    if (action==='getvoicecontent'){ p.version=$('vcVersion').value; }
-    if (action==='savevoicecontent'){ p.professional=$('vcPro').value; p.warm=$('vcWarm').value; p.topic=$('vcTopic').value; p.source=$('vcSource').value; }
-    if (action==='listversionhistory'){ p.limit=$('vcLimit').value; }
+    if (action==='upload_from_url'){ p.url=$('url').value; p.folder=$('folder').value; p.name=$('name').value }
+    if (action==='upload_base64'){ p.base64=$('base64').value; p.folder=$('folder2').value; p.name=$('name2').value; p.__method='POST' }
+    if (action==='list'){ p.folderId=$('folderId').value }
+    if (action==='update'){ p.fileId=$('fileId1').value; p.newName=$('newName').value }
+    if (action==='backup'){ p.fileId=$('fileId2').value }
+    if (action==='move'){ p.fileId=$('fileId3').value; p.targetFolderId=$('targetFolderId').value }
+    if (action==='delete'){ p.fileId=$('fileId4').value }
+    if (action==='getvoicecontent'){ p.version=$('vcVersion').value }
+    if (action==='savevoicecontent'){ p.professional=$('vcPro').value; p.warm=$('vcWarm').value; p.topic=$('vcTopic').value; p.source=$('vcSource').value }
+    if (action==='listversionhistory'){ p.limit=$('vcLimit').value }
 
+    // If Apps Script, use google.script.run; else, send to webhook via fetch
     if (typeof google !== 'undefined' && google.script && google.script.run){
       google.script.run
         .withSuccessHandler((res)=>{ $('output').value = JSON.stringify(res, null, 2); })
         .withFailureHandler((err)=>{ $('output').value = 'ERROR: '+ (err && err.message ? err.message : String(err)); })
         .serverInvoke(p);
     } else {
-      // Send POST request to webhook endpoint and display response
-      const endpoint = (window.WEBHOOK_URL || localStorage.getItem('WEBHOOK_URL') || ($('webapp') ? $('webapp').value : '')).trim();
+      // Send POST/GET request to webhook endpoint and display response
+      const endpoint = (document.getElementById('webapp') ? document.getElementById('webapp').value : '').trim();
       if (!endpoint) {
-        $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
+        document.getElementById('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
         return;
       }
-      $('output').value = '⏳ Sending request...';
+      document.getElementById('output').value = '⏳ Sending request...';
       fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -380,13 +383,13 @@ cat > ui.html <<'EOF'
         let text = await res.text();
         try {
           const json = JSON.parse(text);
-          $('output').value = JSON.stringify(json, null, 2);
+          document.getElementById('output').value = JSON.stringify(json, null, 2);
         } catch {
-          $('output').value = text;
+          document.getElementById('output').value = text;
         }
       })
       .catch(err => {
-        $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
+        document.getElementById('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
       });
     }
   });
