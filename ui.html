@@ -1,403 +1,189 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webhook Tester | Cullinan30a</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-800">
-    <div class="max-w-3xl mx-auto py-8 px-4">
-        <header class="mb-8 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold">WT</div>
-            <div>
-                <h1 class="text-xl font-semibold">Webhook Function Tester</h1>
-                <p class="text-sm text-slate-500">Test all webhook endpoints with custom payloads</p>
-            </div>
-        </header>
-
-        <!-- API Configuration removed: now uses environment variables -->
-        <section class="bg-white rounded-2xl shadow-sm border p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4">🔧 API Environment</h2>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Webhook Endpoint</label>
-                    <div id="envEndpoint" class="w-full border rounded-xl px-3 py-2 bg-gray-100 text-gray-700"></div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Passcode</label>
-                    <div id="envPasscode" class="w-full border rounded-xl px-3 py-2 bg-gray-100 text-gray-700"></div>
-                </div>
-            </div>
-            <div class="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-sm">
-                <strong>✅ Environment:</strong> Using environment webhook endpoint and passcode for all requests.
-            </div>
-        </section>
-
-        <section class="bg-white rounded-2xl shadow-sm border p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4">🧪 Live Webhook Testing</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Action</label>
-                    <select id="testAction" class="w-full border rounded-lg px-3 py-2"></select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Method</label>
-                    <select id="testMethod" class="w-full border rounded-lg px-3 py-2">
-                        <option value="POST">POST</option>
-                        <option value="GET">GET</option>
-                    </select>
-                </div>
-                <div class="md:col-span-2" id="extraFields"></div>
-                <div class="md:col-span-2 flex gap-2">
-                    <button onclick="runTest()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">🚀 Run Test</button>
-                    <button onclick="clearResults()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">🗑️ Clear</button>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium mb-2">Response</label>
-                    <div id="testResults" class="border rounded-lg p-3 bg-gray-50 font-mono text-sm min-h-[100px] overflow-auto">Results will appear here...</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-white rounded-2xl shadow-sm border p-6">
-            <h2 class="text-lg font-semibold mb-4">📋 Activity Log</h2>
-            <div class="flex gap-2 mb-3">
-                <button onclick="clearLog()" class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700">Clear</button>
-                <button onclick="exportLog()" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Export</button>
-            </div>
-            <div id="activityLog" class="border rounded-lg p-3 bg-gray-50 font-mono text-sm h-48 overflow-auto">Activity log will appear here...</div>
-        </section>
-    </div>
-
-    <script>
-        // --- Config Logic ---
-        // --- Environment Variables ---
-        // These should be set by the server or injected at build time
-        // For demo, fallback to window.ENV or hardcoded values
-        const ENV = window.ENV || {
-            WEBHOOK_ENDPOINT: window.WEBHOOK_ENDPOINT || 'https://your-webhook-endpoint.example.com',
-            WEBHOOK_PASSCODE: window.WEBHOOK_PASSCODE || 'your-secret-passcode'
-        };
-
-        // List of available webhook actions and their extra fields (from screenshot and user table)
-        const actions = [
-            { name: 'ping', desc: '測試 API 是否正常', fields: [] },
-            { name: 'version', desc: '顯示目前版本號', fields: [] },
-            { name: 'version_bump', desc: '升級版本號', fields: [ { id: 'inc', label: 'Increment', type: 'select', options: ['patch','minor','major'] } ] },
-            { name: 'init_structure', desc: '建立基礎資料夾結構', fields: [] },
-            { name: 'build_report', desc: '產生報告', fields: [] },
-            { name: 'facepack_index', desc: '整理 Facepack 清單', fields: [] },
-            { name: 'upload_from_url', desc: '由 URL 上載檔案去指定資料夾', fields: [ { id: 'url', label: 'File URL', type: 'text' }, { id: 'folder', label: 'Folder', type: 'text' }, { id: 'name', label: 'File Name', type: 'text' } ] },
-            { name: 'upload_base64', desc: '上載 base64 圖片/檔案去資料夾', fields: [ { id: 'base64', label: 'Base64', type: 'textarea' }, { id: 'folder', label: 'Folder', type: 'text' }, { id: 'name', label: 'File Name', type: 'text' } ] },
-            { name: 'list', desc: '列出資料夾內容', fields: [ { id: 'folderId', label: 'Folder ID', type: 'text' } ] },
-            { name: 'update', desc: '改檔案名稱', fields: [ { id: 'fileId', label: 'File ID', type: 'text' }, { id: 'newName', label: 'New Name', type: 'text' } ] },
-            { name: 'backup', desc: '建立檔案備份', fields: [ { id: 'fileId', label: 'File ID', type: 'text' } ] },
-            { name: 'move', desc: '搬移檔案去另一資料夾', fields: [ { id: 'fileId', label: 'File ID', type: 'text' }, { id: 'targetFolderId', label: 'Target Folder ID', type: 'text' } ] },
-            { name: 'delete', desc: '刪除檔案', fields: [ { id: 'fileId', label: 'File ID', type: 'text' } ] },
-            { name: 'getvoicecontent', desc: '取回最新/指定版本嘅 VoiceContent', fields: [ { id: 'version', label: 'Version', type: 'text' } ] },
-            { name: 'savevoicecontent', desc: '儲存 VoiceContent（專業版+溫暖版）', fields: [ { id: 'professional', label: 'Professional', type: 'textarea' }, { id: 'warm', label: 'Warm', type: 'textarea' }, { id: 'topic', label: 'Topic', type: 'text' }, { id: 'source', label: 'Source', type: 'text' } ] },
-            { name: 'listversionhistory', desc: '顯示 VoiceContent 歷史版本', fields: [ { id: 'limit', label: 'Limit', type: 'number' } ] },
-            { name: 'custom', desc: 'Custom payload', fields: [ { id: 'customPayload', label: 'Custom JSON', type: 'textarea' } ] }
-        ];
-
-        // Populate dropdown
-        function populateActions() {
-            const select = document.getElementById('testAction');
-            select.innerHTML = '';
-            actions.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a.name;
-                opt.textContent = `${a.name} - ${a.desc}`;
-                select.appendChild(opt);
-            });
-        }
-        populateActions();
-
-        // Show extra fields for selected action
-        function showExtraFields() {
-            const selectedAction = document.getElementById('testAction').value;
-            const actionObj = actions.find(a => a.name === selectedAction);
-            const container = document.getElementById('extraFields');
-            container.innerHTML = '';
-            if (!actionObj || !actionObj.fields.length) return;
-            actionObj.fields.forEach(field => {
-                let fieldHtml = '';
-                if (field.type === 'select') {
-                    fieldHtml = `<label class='block text-sm font-medium mb-1'>${field.label}</label><select id='${field.id}' class='w-full border rounded-lg px-3 py-2 mb-4'>${field.options.map(opt => `<option value='${opt}'>${opt}</option>`).join('')}</select>`;
-                } else if (field.type === 'textarea') {
-                    fieldHtml = `<label class='block text-sm font-medium mb-1'>${field.label}</label><textarea id='${field.id}' rows='2' class='w-full border rounded-lg px-3 py-2 font-mono text-sm mb-4'></textarea>`;
-                } else {
-                    fieldHtml = `<label class='block text-sm font-medium mb-1'>${field.label}</label><input id='${field.id}' type='${field.type}' class='w-full border rounded-lg px-3 py-2 mb-4' />`;
-                }
-                container.innerHTML += `<div>${fieldHtml}</div>`;
-            });
-        }
-        document.getElementById('testAction').addEventListener('change', showExtraFields);
-        showExtraFields();
-
-        // No manual endpoint/passcode config: always use ENV
-
-        // Run test
-        async function runTest() {
-            const url = ENV.WEBHOOK_ENDPOINT;
-            const passcode = ENV.WEBHOOK_PASSCODE;
-            document.getElementById('envEndpoint').textContent = url;
-            document.getElementById('envPasscode').textContent = passcode;
-            const action = document.getElementById('testAction').value;
-            const method = document.getElementById('testMethod').value;
-            const resultsEl = document.getElementById('testResults');
-            let payloadObj = { action };
-            // Collect extra fields
-            const actionObj = actions.find(a => a.name === action);
-            if (actionObj && actionObj.fields.length) {
-                actionObj.fields.forEach(field => {
-                    let val = document.getElementById(field.id)?.value;
-                    if (field.type === 'number') val = Number(val);
-                    payloadObj[field.id] = val;
-                });
-                if (action === 'custom') {
-                    try {
-                        payloadObj = JSON.parse(document.getElementById('customPayload').value);
-                    } catch {
-                        resultsEl.textContent = 'ERROR: Custom JSON is not valid.';
-                        return;
-                    }
-                }
-            }
-            payloadObj.passcode = passcode;
-            let options = { method };
-            if (method === 'POST') {
-                options.headers = { 'Content-Type': 'application/json' };
-                options.body = JSON.stringify(payloadObj);
-            }
-            if (!url) {
-                resultsEl.textContent = 'ERROR: Environment WEBHOOK_ENDPOINT not set.';
-                return;
-            }
-            // Show debug info before sending
-            resultsEl.textContent =
-                '--- REQUEST DEBUG ---\n' +
-                'Endpoint: ' + url + '\n' +
-                'Method: ' + method + '\n' +
-                'Payload: ' + JSON.stringify(payloadObj, null, 2) + '\n\nSending request...';
-            try {
-                const response = await fetch(url, options);
-                const data = await response.text();
-                const result = { status: response.status, statusText: response.statusText, body: data };
-                resultsEl.textContent =
-                    '--- REQUEST DEBUG ---\n' +
-                    'Endpoint: ' + url + '\n' +
-                    'Method: ' + method + '\n' +
-                    'Payload: ' + JSON.stringify(payloadObj, null, 2) + '\n\n--- RESPONSE ---\n' +
-                    JSON.stringify(result, null, 2);
-                logActivity(`Test ${action}`, `${method} ${response.status}`);
-            } catch (error) {
-                const errorResult = { error: error.message };
-                resultsEl.textContent =
-                    '--- REQUEST DEBUG ---\n' +
-                    'Endpoint: ' + url + '\n' +
-                    'Method: ' + method + '\n' +
-                    'Payload: ' + JSON.stringify(payloadObj, null, 2) + '\n\n--- ERROR ---\n' +
-                    JSON.stringify(errorResult, null, 2);
-                logActivity(`Test ${action}`, `Error: ${error.message}`);
-            }
-        }
-        function clearResults() {
-            document.getElementById('testResults').textContent = 'Results will appear here...';
-        }
-        function logActivity(action, details) {
-            const logEl = document.getElementById('activityLog');
-            const timestamp = new Date().toLocaleTimeString();
-            const entry = `[${timestamp}] ${action}: ${details}\n`;
-            logEl.textContent += entry;
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-        function clearLog() {
-            document.getElementById('activityLog').textContent = 'Activity log cleared...\n';
-        }
-        function exportLog() {
-            const log = document.getElementById('activityLog').textContent;
-            const blob = new Blob([log], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `webhook-log-${Date.now()}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-    </script>
-</body>
-</html>
-cd ~/chatgpt-automation
-cat > ui.html <<'EOF'
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ChatGPT Drive Console</title>
-<style>
-  :root{--bg:#0b0f14;--card:#121821;--ink:#e6edf3;--muted:#9fb0c0;--accent:#3aa3ff;--accent-2:#21d19f;}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial;}
-  .wrap{max-width:1100px;margin:0 auto;padding:24px;}
-  .grid{display:grid;grid-template-columns:1fr 380px;gap:16px;}
-  .card{background:var(--card);border:1px solid #1f2835;border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.35)}
-  .head{padding:18px 20px;border-bottom:1px solid #1f2835;font-weight:700}
-  .body{padding:16px 20px}
-  .muted{color:var(--muted);font-size:13px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
-  .row > *{flex:1}
-  input,select,textarea{width:100%;background:#0f141c;border:1px solid #233043;color:var(--ink);padding:10px 12px;border-radius:12px}
-  textarea{min-height:180px;font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace}
-  button{background:var(--accent);border:0;color:#001428;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
-  button.secondary{background:#1f2835;color:var(--ink)}
-  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .hide{display:none}
-  .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#182231;color:var(--muted);font-size:12px;margin-right:6px}
-  .ok{color:var(--accent-2);font-weight:700}
-  .danger{color:#ff6b6b;font-weight:700}
-  .hr{height:1px;background:#1f2835;margin:12px 0}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Webhook Tester | Cullinan30a</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;color:#111;background:#fafafa}
+    header{padding:16px 20px;background:#0f172a;color:#fff}
+    h1{margin:0;font-size:18px}
+    .wrap{max-width:980px;margin:24px auto;padding:0 16px}
+    .grid{display:grid;gap:12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    label{font-size:12px;color:#334155}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:14px}
+    textarea{min-height:160px;resize:vertical}
+    button{padding:10px 14px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer}
+    button.ghost{background:#e2e8f0;color:#111}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
+    .two{grid-template-columns:1fr 1fr}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0b1020;color:#d1e7ff;padding:12px;border-radius:8px;max-height:400px;overflow:auto}
+    .muted{color:#64748b;font-size:12px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
+    .right{margin-left:auto}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="grid">
-      <div class="card">
-        <div class="head">ChatGPT Webhook Function Tester</div>
-        <div class="body">
-          <div class="row">
-            <div>
-              <label>Passcode</label>
-              <input id="passcode" type="password" placeholder="Enter WEBHOOK_PASSCODE" />
-            </div>
-            <div>
-              <label>Webhook Endpoint</label>
-              <input id="webapp" type="text" placeholder="ChatGPT Webhook Endpoint URL" />
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label>Function</label>
-              <select id="action"></select>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label>Script</label>
-              <textarea id="script" spellcheck="false" placeholder="Script for selected function will appear here..."></textarea>
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button id="run">Run</button>
-            <button id="reset" class="secondary">Reset</button>
-            <span class="pill">UI v2.0</span>
-          </div>
-          <div class="muted" style="margin-top:6px;">Select a function, view/edit the script, then click Run to send to the ChatGPT webhook.</div>
+  <header><h1>Webhook Function Tester</h1></header>
+  <div class="wrap grid">
+    <div class="card grid two">
+      <div>
+        <label>Webhook Endpoint</label>
+        <input id="endpoint" placeholder="https://script.google.com/macros/s/XXXX/exec">
+      </div>
+      <div>
+        <label>Passcode（可留空）</label>
+        <input id="passcode" placeholder="••••••••">
+      </div>
+    </div>
+
+    <div class="card grid two">
+      <div>
+        <label>Action（可留空）</label>
+        <input id="action" placeholder="savevoicecontent 或其他">
+      </div>
+      <div class="row">
+        <div style="flex:1">
+          <label>Method</label>
+          <select id="method">
+            <option>POST</option>
+            <option>GET</option>
+          </select>
+        </div>
+        <div class="row" style="align-items:center;gap:12px">
+          <label class="muted"><input type="checkbox" id="remember"> 記住 endpoint / passcode</label>
         </div>
       </div>
+    </div>
 
-      <div class="card">
-        <div class="head">Result</div>
-        <div class="body">
-          <div class="muted">Response will appear below. JSON is formatted.</div>
-          <textarea id="output" spellcheck="false" readonly></textarea>
+    <div class="card grid">
+      <label>JSON Payload（POST 會用到；GET 會忽略此欄）</label>
+      <textarea id="payload" spellcheck="false">{
+  "demo": "hello",
+  "timestamp": "{NOW}"
+}</textarea>
+      <div class="row">
+        <button id="run">Run Test</button>
+        <button class="ghost" id="clearResp">Clear Response</button>
+        <span class="badge" id="envBadge">環境：使用輸入欄數值</span>
+        <span class="right muted">結果見下方 Response / Activity Log</span>
+      </div>
+    </div>
+
+    <div class="card grid two">
+      <div>
+        <label>Response</label>
+        <pre id="response">Results will appear here...</pre>
+      </div>
+      <div>
+        <div class="row" style="margin-bottom:8px">
+          <label>Activity Log</label>
+          <div class="right">
+            <button class="ghost" id="exportLog">Export</button>
+            <button class="ghost" id="clearLog">Clear</button>
+          </div>
         </div>
+        <pre id="log">Activity log will appear here...</pre>
       </div>
     </div>
   </div>
 
-<script>
+  <script>
+    const qs = s => document.querySelector(s);
+    const endpointEl = qs('#endpoint');
+    const passcodeEl = qs('#passcode');
+    const actionEl = qs('#action');
+    const methodEl = qs('#method');
+    const payloadEl = qs('#payload');
+    const rememberEl = qs('#remember');
+    const responseEl = qs('#response');
+    const logEl = qs('#log');
+    const envBadge = qs('#envBadge');
+    const runBtn = qs('#run');
+    const clearRespBtn = qs('#clearResp');
+    const clearLogBtn = qs('#clearLog');
+    const exportLogBtn = qs('#exportLog');
 
-// --- Redesigned UI Logic ---
-(function(){
-  const $ = id => document.getElementById(id);
-  // List of available functions and their script templates
-  const functions = [
-    { name: 'ping', script: '{\n  "action": "ping"\n}' },
-    { name: 'version', script: '{\n  "action": "version"\n}' },
-    { name: 'version_bump', script: '{\n  "action": "version_bump",\n  "inc": "patch"\n}' },
-    { name: 'init_structure', script: '{\n  "action": "init_structure"\n}' },
-    { name: 'build_report', script: '{\n  "action": "build_report"\n}' },
-    { name: 'facepack_index', script: '{\n  "action": "facepack_index"\n}' },
-    { name: 'upload_from_url', script: '{\n  "action": "upload_from_url",\n  "url": "https://...",\n  "folder": "Inbox",\n  "name": "demo.jpg"\n}' },
-    { name: 'upload_base64', script: '{\n  "action": "upload_base64",\n  "base64": "data:image/jpeg;base64,...",\n  "folder": "Inbox",\n  "name": "clip.jpg"\n}' },
-    { name: 'list', script: '{\n  "action": "list",\n  "folderId": "<Google Drive Folder ID>"\n}' },
-    { name: 'update', script: '{\n  "action": "update",\n  "fileId": "",\n  "newName": ""\n}' },
-    { name: 'backup', script: '{\n  "action": "backup",\n  "fileId": ""\n}' },
-    { name: 'move', script: '{\n  "action": "move",\n  "fileId": "",\n  "targetFolderId": ""\n}' },
-    { name: 'delete', script: '{\n  "action": "delete",\n  "fileId": ""\n}' },
-    { name: 'getvoicecontent', script: '{\n  "action": "getvoicecontent",\n  "version": "latest"\n}' },
-    { name: 'savevoicecontent', script: '{\n  "action": "savevoicecontent",\n  "professional": "",\n  "warm": "",\n  "topic": "",\n  "source": "ChatGPT"\n}' },
-    { name: 'listversionhistory', script: '{\n  "action": "listversionhistory",\n  "limit": 10\n}' }
-  ];
-
-  // Populate dropdown
-  const actionSelect = $('action');
-  functions.forEach(f => {
-    const opt = document.createElement('option');
-    opt.value = f.name;
-    opt.textContent = f.name;
-    actionSelect.appendChild(opt);
-  });
-
-  // Show script for selected function
-  function showScript() {
-    const selected = actionSelect.value;
-    const func = functions.find(f => f.name === selected);
-    $('script').value = func ? func.script : '';
-  }
-  actionSelect.addEventListener('change', showScript);
-  showScript();
-
-  // Run button logic
-  $('run').addEventListener('click', () => {
-    const passcode = $('passcode').value.trim();
-    const endpoint = $('webapp').value.trim();
-    let script;
-    try {
-      script = JSON.parse($('script').value);
-    } catch {
-      $('output').value = 'ERROR: Script is not valid JSON.';
-      return;
+    const LS_KEYS = {ep:'wt_endpoint', pc:'wt_passcode', ac:'wt_action'};
+    function now(){ return new Date().toISOString(); }
+    function addLog(msg){ logEl.textContent += `[${now()}] ${msg}\n`; logEl.scrollTop = logEl.scrollHeight; }
+    function saveIfNeeded(){
+      if(!rememberEl.checked) return;
+      localStorage.setItem(LS_KEYS.ep, endpointEl.value||'');
+      localStorage.setItem(LS_KEYS.pc, passcodeEl.value||'');
+      localStorage.setItem(LS_KEYS.ac, actionEl.value||'');
     }
-    if (!endpoint) {
-      $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
-      return;
+    function loadFromLS(){
+      const ep = localStorage.getItem(LS_KEYS.ep)||'';
+      const pc = localStorage.getItem(LS_KEYS.pc)||'';
+      const ac = localStorage.getItem(LS_KEYS.ac)||'';
+      if(ep) endpointEl.value = ep;
+      if(pc) passcodeEl.value = pc;
+      if(ac) actionEl.value = ac;
+      rememberEl.checked = !!ep || !!pc || !!ac;
     }
-    if (!passcode) {
-      $('output').value = 'ERROR: Passcode required.';
-      return;
+    function fmtJSON(text){
+      try{ return JSON.stringify(JSON.parse(text), null, 2); }catch(e){ return text; }
     }
-    script.passcode = passcode;
-    $('output').value = '⏳ Sending request...';
-    fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(script)
-    })
-    .then(async res => {
-      let text = await res.text();
-      try {
-        const json = JSON.parse(text);
-        $('output').value = JSON.stringify(json, null, 2);
-      } catch {
-        $('output').value = text;
+    function injectNow(text){
+      return text.replaceAll('{NOW}', now());
+    }
+    async function run(){
+      const endpoint = (endpointEl.value||'').trim();
+      if(!endpoint){ responseEl.textContent = '❌ 請輸入 Webhook Endpoint'; return; }
+      const method = methodEl.value;
+      const params = new URLSearchParams();
+      if(actionEl.value) params.append('action', actionEl.value);
+      if(passcodeEl.value) params.append('passcode', passcodeEl.value);
+      let url = endpoint;
+      const isGET = method === 'GET';
+      let body = null;
+
+      if(isGET){
+        const qsChar = url.includes('?') ? '&' : '?';
+        url = url + (params.toString() ? qsChar + params.toString() : '');
+      }else{
+        const payload = injectNow(payloadEl.value||'{}');
+        body = payload;
+        if(params.toString()){
+          const qsChar = url.includes('?') ? '&' : '?';
+          url = url + qsChar + params.toString();
+        }
       }
-    })
-    .catch(err => {
-      $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
-    });
-  });
 
-  // Reset button logic
-  $('reset').addEventListener('click', () => {
-    $('output').value = '';
-    showScript();
-  });
-})();
-</script>
+      addLog(`→ ${method} ${url}`);
+      saveIfNeeded();
+      try{
+        const res = await fetch(url, {
+          method,
+          headers: isGET ? {} : {'Content-Type':'application/json'},
+          body: isGET ? undefined : body
+        });
+        const text = await res.text();
+        let out = text;
+        try{ out = JSON.stringify(JSON.parse(text), null, 2); }catch(e){}
+        responseEl.textContent = out;
+        addLog(`✓ ${res.status} ${res.statusText}`);
+      }catch(err){
+        responseEl.textContent = `Error: ${err}`;
+        addLog(`✗ Error ${err}`);
+      }
+    }
+
+    runBtn.addEventListener('click', run);
+    clearRespBtn.addEventListener('click', ()=> responseEl.textContent = 'Results will appear here...');
+    clearLogBtn.addEventListener('click', ()=> logEl.textContent = '');
+    exportLogBtn.addEventListener('click', ()=>{
+      const blob = new Blob([logEl.textContent], {type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `webhook_tester_log_${Date.now()}.txt`;
+      a.click();
+    });
+
+    loadFromLS();
+    addLog('Ready.');
+  </script>
 </body>
 </html>
-EOF
