@@ -205,214 +205,117 @@ cat > ui.html <<'EOF'
   <div class="wrap">
     <div class="grid">
       <div class="card">
-        <div class="head">控制台 · ChatGPT Drive Functions</div>
+        <div class="head">ChatGPT Webhook Function Tester</div>
         <div class="body">
           <div class="row">
             <div>
               <label>Passcode</label>
-              <input id="passcode" type="password" placeholder="輸入 WEBHOOK_PASSCODE" />
+              <input id="passcode" type="password" placeholder="Enter WEBHOOK_PASSCODE" />
             </div>
             <div>
-              <label>動作（Action）</label>
-              <select id="action">
-                <option value="ping">ping</option>
-                <option value="version">version</option>
-                <option value="version_bump">version_bump</option>
-                <option value="init_structure">init_structure</option>
-                <option value="build_report">build_report</option>
-                <option value="facepack_index">facepack_index</option>
-                <option value="upload_from_url">upload_from_url</option>
-                <option value="upload_base64">upload_base64</option>
-                <option value="list">list</option>
-                <option value="update">update</option>
-                <option value="backup">backup</option>
-                <option value="move">move</option>
-                <option value="delete">delete</option>
-                <option value="getvoicecontent">getvoicecontent</option>
-                <option value="savevoicecontent">savevoicecontent</option>
-                <option value="listversionhistory">listversionhistory</option>
-              </select>
+              <label>Webhook Endpoint</label>
+              <input id="webapp" type="text" placeholder="ChatGPT Webhook Endpoint URL" />
             </div>
           </div>
-
-          <div id="fields">
-            <div class="hr"></div>
-
-            <div id="fld-version_bump" class="row hide">
-              <div><label>inc</label>
-                <select id="inc">
-                  <option value="patch">patch</option>
-                  <option value="minor">minor</option>
-                  <option value="major">major</option>
-                </select>
-              </div>
-            </div>
-
-            <div id="fld-upload_from_url" class="row hide">
-              <div><label>url</label><input id="url" placeholder="https://..." /></div>
-              <div><label>folder</label><input id="folder" placeholder="Facepack/Style 或 Inbox" /></div>
-              <div><label>name</label><input id="name" placeholder="可選：demo.jpg" /></div>
-            </div>
-
-            <div id="fld-upload_base64" class="row hide">
-              <div><label>base64</label><textarea id="base64" placeholder="data:image/jpeg;base64,..."></textarea></div>
-              <div><label>folder</label><input id="folder2" placeholder="Inbox" /></div>
-              <div><label>name</label><input id="name2" placeholder="clip.jpg" /></div>
-            </div>
-
-            <div id="fld-list" class="row hide">
-              <div><label>folderId</label><input id="folderId" placeholder="Google Drive 資料夾 ID" /></div>
-            </div>
-
-            <div id="fld-update" class="row hide">
-              <div><label>fileId</label><input id="fileId1" /></div>
-              <div><label>newName</label><input id="newName" /></div>
-            </div>
-
-            <div id="fld-backup" class="row hide">
-              <div><label>fileId</label><input id="fileId2" /></div>
-            </div>
-
-            <div id="fld-move" class="row hide">
-              <div><label>fileId</label><input id="fileId3" /></div>
-              <div><label>targetFolderId</label><input id="targetFolderId" /></div>
-            </div>
-
-            <div id="fld-delete" class="row hide">
-              <div><label>fileId</label><input id="fileId4" /></div>
-            </div>
-
-            <div id="fld-getvoicecontent" class="row hide">
-              <div><label>version（可留空 latest）</label><input id="vcVersion" /></div>
-            </div>
-
-            <div id="fld-savevoicecontent" class="row hide">
-              <div><label>professional</label><textarea id="vcPro" placeholder="專業版內容"></textarea></div>
-              <div><label>warm</label><textarea id="vcWarm" placeholder="溫暖版內容"></textarea></div>
-              <div><label>topic</label><input id="vcTopic" placeholder="主題" /></div>
-              <div><label>source</label><input id="vcSource" placeholder="來源（預設 ChatGPT）" /></div>
-            </div>
-
-            <div id="fld-listversionhistory" class="row hide">
-              <div><label>limit</label><input id="vcLimit" value="10" /></div>
+          <div class="row">
+            <div>
+              <label>Function</label>
+              <select id="action"></select>
             </div>
           </div>
-
+          <div class="row">
+            <div>
+              <label>Script</label>
+              <textarea id="script" spellcheck="false" placeholder="Script for selected function will appear here..."></textarea>
+            </div>
+          </div>
           <div class="row" style="margin-top:10px">
-  <input id="webapp" type="text" placeholder="ChatGPT Webhook Endpoint URL" style="width:50%;margin-right:8px;" />
-  <button id="run">Send to ChatGPT Webhook</button>
-  <button id="reset" class="secondary">Reset</button>
-  <span class="pill">UI v1.0</span>
-  <div class="muted" style="margin-top:6px;">This button will activate the script and send your request to the ChatGPT webhook endpoint above.</div>
+            <button id="run">Run</button>
+            <button id="reset" class="secondary">Reset</button>
+            <span class="pill">UI v2.0</span>
           </div>
+          <div class="muted" style="margin-top:6px;">Select a function, view/edit the script, then click Run to send to the ChatGPT webhook.</div>
         </div>
       </div>
 
       <div class="card">
-        <div class="head">結果 / Result</div>
+        <div class="head">Result</div>
         <div class="body">
-          <div class="muted">回應會顯示於下方，JSON 已縮排。</div>
-          <textarea id="output" spellcheck="false"></textarea>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <button id="rerun" style="background:#21d19f;color:#001428;" type="button">Re-Run Result</button>
+          <div class="muted">Response will appear below. JSON is formatted.</div>
+          <textarea id="output" spellcheck="false" readonly></textarea>
         </div>
       </div>
     </div>
   </div>
 
 <script>
+
+// --- Redesigned UI Logic ---
 (function(){
-  const $ = (id)=>document.getElementById(id);
-  const sections = [
-    'version_bump','upload_from_url','upload_base64','list','update','backup','move','delete',
-    'getvoicecontent','savevoicecontent','listversionhistory'
+  const $ = id => document.getElementById(id);
+  // List of available functions and their script templates
+  const functions = [
+    { name: 'ping', script: '{\n  "action": "ping"\n}' },
+    { name: 'version', script: '{\n  "action": "version"\n}' },
+    { name: 'version_bump', script: '{\n  "action": "version_bump",\n  "inc": "patch"\n}' },
+    { name: 'init_structure', script: '{\n  "action": "init_structure"\n}' },
+    { name: 'build_report', script: '{\n  "action": "build_report"\n}' },
+    { name: 'facepack_index', script: '{\n  "action": "facepack_index"\n}' },
+    { name: 'upload_from_url', script: '{\n  "action": "upload_from_url",\n  "url": "https://...",\n  "folder": "Inbox",\n  "name": "demo.jpg"\n}' },
+    { name: 'upload_base64', script: '{\n  "action": "upload_base64",\n  "base64": "data:image/jpeg;base64,...",\n  "folder": "Inbox",\n  "name": "clip.jpg"\n}' },
+    { name: 'list', script: '{\n  "action": "list",\n  "folderId": "<Google Drive Folder ID>"\n}' },
+    { name: 'update', script: '{\n  "action": "update",\n  "fileId": "",\n  "newName": ""\n}' },
+    { name: 'backup', script: '{\n  "action": "backup",\n  "fileId": ""\n}' },
+    { name: 'move', script: '{\n  "action": "move",\n  "fileId": "",\n  "targetFolderId": ""\n}' },
+    { name: 'delete', script: '{\n  "action": "delete",\n  "fileId": ""\n}' },
+    { name: 'getvoicecontent', script: '{\n  "action": "getvoicecontent",\n  "version": "latest"\n}' },
+    { name: 'savevoicecontent', script: '{\n  "action": "savevoicecontent",\n  "professional": "",\n  "warm": "",\n  "topic": "",\n  "source": "ChatGPT"\n}' },
+    { name: 'listversionhistory', script: '{\n  "action": "listversionhistory",\n  "limit": 10\n}' }
   ];
 
-  function setFields(){
-    sections.forEach(s=>{ const el=$('fld-'+s); if(el) el.classList.add('hide'); });
-    const act = $('action').value;
-    const has = $('fld-'+act);
-    if (has) has.classList.remove('hide');
+  // Populate dropdown
+  const actionSelect = $('action');
+  functions.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.name;
+    opt.textContent = f.name;
+    actionSelect.appendChild(opt);
+  });
+
+  // Show script for selected function
+  function showScript() {
+    const selected = actionSelect.value;
+    const func = functions.find(f => f.name === selected);
+    $('script').value = func ? func.script : '';
   }
+  actionSelect.addEventListener('change', showScript);
+  showScript();
 
-  $('action').addEventListener('change', setFields);
-  setFields();
-
-  $('reset').addEventListener('click', ()=>{
-    $('output').value='';
-  });
-
-  $('run').addEventListener('click', ()=>{
-    const action = document.getElementById('action').value;
-    const passcode = document.getElementById('passcode').value || '';
-    const p = { action, passcode };
-
-    if (action==='version_bump') p.inc = $('inc').value;
-    if (action==='upload_from_url'){ p.url=$('url').value; p.folder=$('folder').value; p.name=$('name').value }
-    if (action==='upload_base64'){ p.base64=$('base64').value; p.folder=$('folder2').value; p.name=$('name2').value; p.__method='POST' }
-    if (action==='list'){ p.folderId=$('folderId').value }
-    if (action==='update'){ p.fileId=$('fileId1').value; p.newName=$('newName').value }
-    if (action==='backup'){ p.fileId=$('fileId2').value }
-    if (action==='move'){ p.fileId=$('fileId3').value; p.targetFolderId=$('targetFolderId').value }
-    if (action==='delete'){ p.fileId=$('fileId4').value }
-    if (action==='getvoicecontent'){ p.version=$('vcVersion').value }
-    if (action==='savevoicecontent'){ p.professional=$('vcPro').value; p.warm=$('vcWarm').value; p.topic=$('vcTopic').value; p.source=$('vcSource').value }
-    if (action==='listversionhistory'){ p.limit=$('vcLimit').value }
-
-    // If Apps Script, use google.script.run; else, send to webhook via fetch
-    if (typeof google !== 'undefined' && google.script && google.script.run){
-      google.script.run
-        .withSuccessHandler((res)=>{ $('output').value = JSON.stringify(res, null, 2); })
-        .withFailureHandler((err)=>{ $('output').value = 'ERROR: '+ (err && err.message ? err.message : String(err)); })
-        .serverInvoke(p);
-    } else {
-      // Send POST/GET request to webhook endpoint and display response
-      const endpoint = (document.getElementById('webapp') ? document.getElementById('webapp').value : '').trim();
-      if (!endpoint) {
-        document.getElementById('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
-        return;
-      }
-      document.getElementById('output').value = '⏳ Sending request...';
-      fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(p)
-      })
-      .then(async res => {
-        let text = await res.text();
-        try {
-          const json = JSON.parse(text);
-          document.getElementById('output').value = JSON.stringify(json, null, 2);
-        } catch {
-          document.getElementById('output').value = text;
-        }
-      })
-      .catch(err => {
-        document.getElementById('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
-      });
+  // Run button logic
+  $('run').addEventListener('click', () => {
+    const passcode = $('passcode').value.trim();
+    const endpoint = $('webapp').value.trim();
+    let script;
+    try {
+      script = JSON.parse($('script').value);
+    } catch {
+      $('output').value = 'ERROR: Script is not valid JSON.';
+      return;
     }
-  });
-
-  // Re-Run Result button logic
-  $('rerun').addEventListener('click', () => {
-    const endpoint = (window.WEBHOOK_URL || localStorage.getItem('WEBHOOK_URL') || ($('webapp') ? $('webapp').value : '')).trim();
     if (!endpoint) {
       $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
       return;
     }
-    let data;
-    try {
-      data = JSON.parse($('output').value);
-    } catch {
-      $('output').value = 'ERROR: Result is not valid JSON.';
+    if (!passcode) {
+      $('output').value = 'ERROR: Passcode required.';
       return;
     }
-    $('output').value = '⏳ Re-sending result JSON...';
+    script.passcode = passcode;
+    $('output').value = '⏳ Sending request...';
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(script)
     })
     .then(async res => {
       let text = await res.text();
@@ -426,6 +329,12 @@ cat > ui.html <<'EOF'
     .catch(err => {
       $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
     });
+  });
+
+  // Reset button logic
+  $('reset').addEventListener('click', () => {
+    $('output').value = '';
+    showScript();
   });
 })();
 </script>
