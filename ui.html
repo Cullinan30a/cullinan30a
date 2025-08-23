@@ -34,116 +34,8 @@
 <body>
   <div class="wrap">
     <div class="grid">
-      <div class="card">
-        <div class="head">控制台 · ChatGPT Drive Functions</div>
-        <div class="body">
-          <div class="row">
-            <div>
-              <label>Passcode</label>
-              <input id="passcode" type="password" placeholder="輸入 WEBHOOK_PASSCODE" />
-            </div>
-            <div>
-              <label>動作（Action）</label>
-              <select id="action">
-                <option value="ping">ping</option>
-                <option value="version">version</option>
-                <option value="version_bump">version_bump</option>
-                <option value="init_structure">init_structure</option>
-                <option value="build_report">build_report</option>
-                <option value="facepack_index">facepack_index</option>
-                <option value="upload_from_url">upload_from_url</option>
-                <option value="upload_base64">upload_base64</option>
-                <option value="list">list</option>
-                <option value="update">update</option>
-                <option value="backup">backup</option>
-                <option value="move">move</option>
-                <option value="delete">delete</option>
-                <option value="getvoicecontent">getvoicecontent</option>
-                <option value="savevoicecontent">savevoicecontent</option>
-                <option value="listversionhistory">listversionhistory</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="fields">
-            <div class="hr"></div>
-
-            <div id="fld-version_bump" class="row hide">
-              <div><label>inc</label>
-                <select id="inc">
-                  <option value="patch">patch</option>
-                  <option value="minor">minor</option>
-                  <option value="major">major</option>
-                </select>
-              </div>
-            </div>
-
-            <div id="fld-upload_from_url" class="row hide">
-              <div><label>url</label><input id="url" placeholder="https://..." /></div>
-              <div><label>folder</label><input id="folder" placeholder="Facepack/Style 或 Inbox" /></div>
-              <div><label>name</label><input id="name" placeholder="可選：demo.jpg" /></div>
-            </div>
-
-            <div id="fld-upload_base64" class="row hide">
-              <div><label>base64</label><textarea id="base64" placeholder="data:image/jpeg;base64,..."></textarea></div>
-              <div><label>folder</label><input id="folder2" placeholder="Inbox" /></div>
-              <div><label>name</label><input id="name2" placeholder="clip.jpg" /></div>
-            </div>
-
-            <div id="fld-list" class="row hide">
-              <div><label>folderId</label><input id="folderId" placeholder="Google Drive 資料夾 ID" /></div>
-            </div>
-
-            <div id="fld-update" class="row hide">
-              <div><label>fileId</label><input id="fileId1" /></div>
-              <div><label>newName</label><input id="newName" /></div>
-            </div>
-
-            <div id="fld-backup" class="row hide">
-              <div><label>fileId</label><input id="fileId2" /></div>
-            </div>
-
-            <div id="fld-move" class="row hide">
-              <div><label>fileId</label><input id="fileId3" /></div>
-              <div><label>targetFolderId</label><input id="targetFolderId" /></div>
-            </div>
-
-            <div id="fld-delete" class="row hide">
-              <div><label>fileId</label><input id="fileId4" /></div>
-            </div>
-
-            <div id="fld-getvoicecontent" class="row hide">
-              <div><label>version（可留空 latest）</label><input id="vcVersion" /></div>
-            </div>
-
-            <div id="fld-savevoicecontent" class="row hide">
-              <div><label>professional</label><textarea id="vcPro" placeholder="專業版內容"></textarea></div>
-              <div><label>warm</label><textarea id="vcWarm" placeholder="溫暖版內容"></textarea></div>
-              <div><label>topic</label><input id="vcTopic" placeholder="主題" /></div>
-              <div><label>source</label><input id="vcSource" placeholder="來源（預設 ChatGPT）" /></div>
-            </div>
-
-            <div id="fld-listversionhistory" class="row hide">
-              <div><label>limit</label><input id="vcLimit" value="10" /></div>
-            </div>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <button id="run">RUN</button>
-            <button id="preset" style="background:#2563eb;color:#fff;margin-left:8px;" type="button">Preset Test</button>
-            <button id="reset" class="secondary">Reset</button>
-            <span class="pill">UI v1.0</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="head">結果 / Result</div>
-        <div class="body">
-          <div class="muted">回應會顯示於下方，JSON 已縮排。</div>
-          <textarea id="output" spellcheck="false"></textarea>
-        </div>
-      </div>
+      <!-- Only one main UI block should remain here. -->
+      <!-- ...existing code for one console window... -->
     </div>
   </div>
 
@@ -239,6 +131,40 @@
         $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
       });
     }
+  });
+
+  // Re-Run Result button logic
+  $('rerun').addEventListener('click', () => {
+    const endpoint = (window.WEBHOOK_URL || localStorage.getItem('WEBHOOK_URL') || ($('webapp') ? $('webapp').value : '')).trim();
+    if (!endpoint) {
+      $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
+      return;
+    }
+    let data;
+    try {
+      data = JSON.parse($('output').value);
+    } catch {
+      $('output').value = 'ERROR: Result is not valid JSON.';
+      return;
+    }
+    $('output').value = '⏳ Re-sending result JSON...';
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(async res => {
+      let text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        $('output').value = JSON.stringify(json, null, 2);
+      } catch {
+        $('output').value = text;
+      }
+    })
+    .catch(err => {
+      $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
+    });
   });
 })();
 </script>
@@ -386,6 +312,9 @@ cat > ui.html <<'EOF'
           <div class="muted">回應會顯示於下方，JSON 已縮排。</div>
           <textarea id="output" spellcheck="false"></textarea>
         </div>
+        <div class="row" style="margin-top:10px">
+          <button id="rerun" style="background:#21d19f;color:#001428;" type="button">Re-Run Result</button>
+        </div>
       </div>
     </div>
   </div>
@@ -460,6 +389,40 @@ cat > ui.html <<'EOF'
         $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
       });
     }
+  });
+
+  // Re-Run Result button logic
+  $('rerun').addEventListener('click', () => {
+    const endpoint = (window.WEBHOOK_URL || localStorage.getItem('WEBHOOK_URL') || ($('webapp') ? $('webapp').value : '')).trim();
+    if (!endpoint) {
+      $('output').value = 'ERROR: Webhook endpoint not set. Please provide the URL.';
+      return;
+    }
+    let data;
+    try {
+      data = JSON.parse($('output').value);
+    } catch {
+      $('output').value = 'ERROR: Result is not valid JSON.';
+      return;
+    }
+    $('output').value = '⏳ Re-sending result JSON...';
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(async res => {
+      let text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        $('output').value = JSON.stringify(json, null, 2);
+      } catch {
+        $('output').value = text;
+      }
+    })
+    .catch(err => {
+      $('output').value = 'ERROR: ' + (err && err.message ? err.message : String(err));
+    });
   });
 })();
 </script>
