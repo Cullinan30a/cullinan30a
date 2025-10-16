@@ -1,10 +1,10 @@
 # Cullinan30a Web Tools Collection 20/8/2025| 工具集合
 
-## Latest Update (v6.15) 17/10/2025
+## Latest Update (v6.16) 17/10/2025
 
-- **Index shortcut for GPS logger**: Added the Mobile GPS Logger page to the main index so field teams can launch the Apps Script capture UI directly
-- **Deployment fix carryover**: Retains the hardened POST endpoint, validation, and logging updates introduced in v6.14 for stable Drive writes
-- **Mobile-first continuity**: Keeps the capture preview tweaks to reassure users after every logged coordinate
+- **GPS quick-launch card**: Added a dedicated Mobile GPS Logger card to the bottom of `index.html` with inline instructions and a one-tap launch button
+- **Dashboard consistency**: Keeps the index entry from v6.15 so the logger appears in both the list view and the new quick-launch area
+- **Documentation refresh**: Updated release notes to highlight the inline access point alongside the hardened Apps Script backend from v6.14
 
 🌐 **Live Site**: [https://v0-cullinan30a.vercel.app/](https://v0-cullinan30a.vercel.app/)
 

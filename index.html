@@ -142,6 +142,52 @@
     .release-note strong {
       color: #1d4ed8;
     }
+
+    .gps-card {
+      margin-top: 30px;
+      padding: 18px 20px;
+      border: 1px solid #1d4ed8;
+      background: #f8fbff;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.12);
+    }
+
+    .gps-card h3 {
+      margin-top: 0;
+      color: #1d4ed8;
+    }
+
+    .gps-card p {
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    .gps-card .gps-actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .gps-card .gps-button {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.3s ease;
+    }
+
+    .gps-card .gps-button:hover {
+      background: #1e3a8a;
+    }
   </style>
 </head>
 
@@ -182,13 +228,13 @@
     }
   </script>
 
-  <!-- version: v6.15 | Updated: 2025-10-17 11:30 (GMT+8) -->
-  <div class="status-bar">v6.15 | Updated: 2025-10-17 11:30 (GMT+8) | Auth Protected + FacePack Dashboard | 📍 GPS Logger Deployment Fixes | 🔐 Secure Access Enabled
+  <!-- version: v6.16 | Updated: 2025-10-17 15:45 (GMT+8) -->
+  <div class="status-bar">v6.16 | Updated: 2025-10-17 15:45 (GMT+8) | Auth Protected + FacePack Dashboard | 📍 GPS Logger Quick Access Card | 🔐 Secure Access Enabled
   </div>
 
   <div class="release-note">
-    <strong>v6.15 – 2025-10-17 11:30 (GMT+8):</strong> Added the Mobile GPS Logger entry to the index so the Apps Script capture page is one tap away for phone deployments.
-    Keeps the GPS fixes from v6.14 while improving discoverability directly from the main dashboard.
+    <strong>v6.16 – 2025-10-17 15:45 (GMT+8):</strong> Added a dedicated Mobile GPS Logger quick-launch card at the bottom of the index so teams can trigger captures without leaving the dashboard.
+    Retains the v6.15 entry while offering inline documentation and a one-tap launch experience.
   </div>
 
   <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -213,6 +259,22 @@
     <ul id="userLinksList" class="page-list">
       <!-- User added links will appear here -->
     </ul>
+  </div>
+
+  <div class="gps-card">
+    <h3>📍 Mobile GPS Logger Quick Launch | 快速啟動定位紀錄器</h3>
+    <p>
+      Access the Google Apps Script capture interface directly from here. The logger requests your phone's GPS permission and
+      writes the coordinates to <strong>Lfile</strong> in the <em>chatgpt</em> Drive folder with accuracy and device metadata for auditing.
+    </p>
+    <div class="gps-actions">
+      <a class="gps-button" href="gpsLogger.html">
+        🚀 Open GPS Logger Page
+      </a>
+      <button class="gps-button" style="background:#10b981;" onclick="window.open('https://script.google.com/', '_blank')">
+        📄 Deployment Guide
+      </button>
+    </div>
   </div>
 
   <script>
