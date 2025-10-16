@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f4f6fb;
+        color: #1f2933;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+      }
+
+      .status {
+        margin-top: 16px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .status.error {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .status.success {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .meta {
+        margin-top: 12px;
+        color: #64748b;
+        font-size: 12px;
+      }
+
+      button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: none;
+        background: #2563eb;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>📍 Mobile GPS Logger</h1>
+      <p>This web app requests your device location and writes it into the <strong>Lfile</strong> stored inside the <em>chatgpt</em> Google Drive folder.</p>
+      <p class="meta">Generated at: <?= generatedAt ?> (GMT+8)</p>
+      <button id="captureBtn">Capture Current Location</button>
+      <div id="status" class="status">Waiting for permission…</div>
+    </div>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const buttonEl = document.getElementById('captureBtn');
+
+      function setStatus(message, type = '') {
+        statusEl.textContent = message;
+        statusEl.className = 'status' + (type ? ' ' + type : '');
+      }
+
+      function captureLocation() {
+        if (!navigator.geolocation) {
+          setStatus('Geolocation is not supported by this device/browser.', 'error');
+          buttonEl.disabled = true;
+          return;
+        }
+
+        setStatus('Requesting GPS position…');
+        buttonEl.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0
+        });
+      }
+
+      function onSuccess(position) {
+        const coords = position.coords;
+        const payload = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy,
+          deviceInfo: navigator.userAgent,
+          source: 'mobile-webapp'
+        };
+
+        setStatus('Location captured. Saving to Google Drive…');
+
+        google.script.run
+          .withSuccessHandler(result => {
+            if (result && result.success) {
+              setStatus('✅ Location logged to Lfile.\n' + result.entry, 'success');
+              buttonEl.disabled = false;
+            } else {
+              setStatus('Failed to log location. Please try again later.', 'error');
+              buttonEl.disabled = false;
+            }
+          })
+          .withFailureHandler(err => {
+            console.error(err);
+            setStatus('Error logging location: ' + err.message, 'error');
+            buttonEl.disabled = false;
+          })
+          .logLocationFromClient(payload);
+      }
+
+      function onError(error) {
+        console.error(error);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setStatus('Permission denied. Enable location access and try again.', 'error');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setStatus('Location information is unavailable. Move to an open area and retry.', 'error');
+            break;
+          case error.TIMEOUT:
+            setStatus('Location request timed out. Please try again.', 'error');
+            break;
+          default:
+            setStatus('An unknown error occurred while retrieving location.', 'error');
+        }
+        buttonEl.disabled = false;
+      }
+
+      buttonEl.addEventListener('click', () => {
+        buttonEl.disabled = true;
+        captureLocation();
+      });
+
+      // Auto-trigger on load for convenience
+      captureLocation();
+    </script>
+  </body>
+</html>
