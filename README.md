@@ -1,12 +1,10 @@
 # Cullinan30a Web Tools Collection 20/8/2025| 工具集合
 
-## Latest Update (v6.9) 20/08/2025
+## Latest Update (v6.16) 17/10/2025
 
-- **Full authentication system**: All pages now require login via `auth.html` (multi-password, 24h session, logout)
-- **FacePack.ID dashboard**: Real-time API, activity log, ChatGPT integration
-- **ABC Drive Viewer**: Updated Apps Script endpoint, new folder ID, improved file listing and debug tools
-- **Status bar**: v6.9 | Updated: 2025-08-16 | Auth Protected + FacePack Dashboard
-- **Deployment**: Vercel auto-deploy, GitHub integration
+- **GPS quick-launch card**: Added a dedicated Mobile GPS Logger card to the bottom of `index.html` with inline instructions and a one-tap launch button
+- **Dashboard consistency**: Keeps the index entry from v6.15 so the logger appears in both the list view and the new quick-launch area
+- **Documentation refresh**: Updated release notes to highlight the inline access point alongside the hardened Apps Script backend from v6.14
 
 🌐 **Live Site**: [https://v0-cullinan30a.vercel.app/](https://v0-cullinan30a.vercel.app/)
 
@@ -49,6 +47,12 @@
 ### 7. 🤖 AI Prompt Generator
 
 - **ai_prompt_generator.html**: Generate prompts for various AI applications, customizable templates
+
+### 8. 📍 Mobile GPS Logger (Apps Script)
+
+- **gps_logger_appscript.gs / gpsLogger.html**: Deployable Google Apps Script web app that requests mobile GPS access
+- **Automatic Drive logging**: Stores timestamped coordinates inside `Lfile` within the chatgpt folder (with web + API capture modes)
+- **Device metadata**: Captures accuracy + user agent for auditing and troubleshooting
 
 ## 🛠️ Getting Started | 開始使用
 
