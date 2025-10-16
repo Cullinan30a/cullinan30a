@@ -128,6 +128,20 @@
       color: #856404;
       margin-left: 8px;
     }
+
+    .release-note {
+      border: 1px solid #2563eb;
+      background-color: #eef2ff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .release-note strong {
+      color: #1d4ed8;
+    }
   </style>
 </head>
 
@@ -168,8 +182,13 @@
     }
   </script>
 
-  <!-- version: v6.12 | Updated: 2025-08-22 (2025-08-16) -->
-  <div class="status-bar">v6.12 | Updated: 2025-08-22 | Updated: 2025-08-16 | Auth Protected + FacePack Dashboard | 🔐 Secure Access Enabled
+  <!-- version: v6.15 | Updated: 2025-10-17 11:30 (GMT+8) -->
+  <div class="status-bar">v6.15 | Updated: 2025-10-17 11:30 (GMT+8) | Auth Protected + FacePack Dashboard | 📍 GPS Logger Deployment Fixes | 🔐 Secure Access Enabled
+  </div>
+
+  <div class="release-note">
+    <strong>v6.15 – 2025-10-17 11:30 (GMT+8):</strong> Added the Mobile GPS Logger entry to the index so the Apps Script capture page is one tap away for phone deployments.
+    Keeps the GPS fixes from v6.14 while improving discoverability directly from the main dashboard.
   </div>
 
   <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -207,7 +226,8 @@
       { title: "Voice Content Speaker v6.12 | Updated: 2025-08-22 | 語音內容播放器 + 資料面板", file: "voice.html", exists: true },
       { title: "FacePack.ID Dashboard | 面部識別數據面板", file: "facepack.html", exists: true },
       { title: "Add Link Manager | 連結管理器", file: "add_link.html", exists: true },
-      { title: "ChatGPT Drive Console | ChatGPT 雲端控制台", file: "ui.html", exists: true }
+      { title: "ChatGPT Drive Console | ChatGPT 雲端控制台", file: "ui.html", exists: true },
+      { title: "Mobile GPS Logger | 行動定位紀錄器", file: "gpsLogger.html", exists: true }
     ];
 
     const pageList = document.getElementById("pageList");
