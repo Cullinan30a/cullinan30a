@@ -275,8 +275,8 @@
       // Add base URL to relative links (basic implementation)
       try {
         const baseUrl = new URL(originalUrl).origin;
-        processedHtml = processedHtml.replace(/src="\/([^"]*)"/, `src="${baseUrl}/$1"`);
-        processedHtml = processedHtml.replace(/href="\/([^"]*)"/, `href="${baseUrl}/$1"`);
+        processedHtml = processedHtml.replace(/src="\/([^"]*)"/g, `src="${baseUrl}/$1"`);
+        processedHtml = processedHtml.replace(/href="\/([^"]*)"/g, `href="${baseUrl}/$1"`);
       } catch (e) {
         console.warn('Could not process relative URLs:', e);
       }
